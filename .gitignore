@@ -1,0 +1,6 @@
+# OS related files
+.directory
+
+# JetBrains IDE files
+.idea/
+
