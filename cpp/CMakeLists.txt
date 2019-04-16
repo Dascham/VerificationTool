@@ -3,4 +3,11 @@ project(cpp)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(cpp main.cpp)
+add_executable(cpp
+        src/main.cpp
+        src/State.h
+        src/Group.h
+        src/Model/Model.h
+        src/Model/Location.h
+        src/Model/Edge.h
+        )
