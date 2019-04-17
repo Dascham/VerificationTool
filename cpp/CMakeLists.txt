@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(
         src/
+        lib/kissnet
 )
 
 add_executable(cpp
