@@ -3,6 +3,10 @@ project(cpp)
 
 set(CMAKE_CXX_STANDARD 14)
 
+include_directories(
+        src/
+)
+
 add_executable(cpp
         src/main.cpp
         src/State.h

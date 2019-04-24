@@ -3,8 +3,7 @@
 
 #include <vector>
 
-#include "../State.h"
-#include "Predicate.h"
+#include "State.h"
 
 namespace Model {
 
@@ -32,7 +31,9 @@ namespace Model {
             // Assignment operator
             // Value
 
-            State perform(State current) const;
+            State perform(State current) const {
+
+            };
         };
 
         Guard guard;
