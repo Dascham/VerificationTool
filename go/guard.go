@@ -1,9 +1,9 @@
 package main
 
 type Guard struct {
-	GuardValue int
-	ComparisonOperator string
 	VariableToEvaluate string
+	ComparisonOperator string
+	GuardValue int
 }
 //a function that only applies to guards
 func (g Guard) Evaluate(localVariables map[string]int) bool{

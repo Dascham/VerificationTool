@@ -1,21 +1,21 @@
 package main
 
 type Update struct {
-	updateValue int
 	variableToUpdate string
 	operator string
+	updateValue int
 }
 func (u Update) Update(localVariables map[string]int){
 	switch u.operator {
-	case "+":
+	case "+", "+=":
 		localVariables[u.variableToUpdate] = localVariables[u.variableToUpdate] + u.updateValue
-	case "-":
+	case "-", "-=":
 		localVariables[u.variableToUpdate] = localVariables[u.variableToUpdate] - u.updateValue
-	case "*":
+	case "*", "*=":
 		localVariables[u.variableToUpdate] = localVariables[u.variableToUpdate] * u.updateValue
-	case "/":
+	case "/", "/=":
 		localVariables[u.variableToUpdate] = localVariables[u.variableToUpdate] / u.updateValue
-	case "":
+	case "=":
 		localVariables[u.variableToUpdate] = u.updateValue
 	}
 }

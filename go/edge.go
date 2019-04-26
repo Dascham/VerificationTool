@@ -5,10 +5,10 @@ package main
 type Edge struct {
 	Src *Location
 	Dst *Location
-	Guard Guard
+	Guard []Guard
 	Ch string
 	IsSend bool
-	Update Update
+	Update []Update
 }
 
 //! is send
@@ -16,9 +16,11 @@ type Edge struct {
 
 func (e Edge) EdgeIsActive(localVariables map[string]int) bool{
 	var result bool = false
-	if (e.Guard.Evaluate(localVariables) &&
-		e.Dst.Invariant.IsValid(localVariables)){ //add one more for chan
-		result = true
-	}
+	for i := 0; i < len(e.Guard); i++ {
+		if (e.Guard[i].Evaluate(localVariables) &&
+			e.Dst.Invariant.IsValid(localVariables)) { //add one more for chan
+			result = true
+			}
+		}
 	return result
 }

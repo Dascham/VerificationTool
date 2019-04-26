@@ -20,15 +20,25 @@ func Setup() map[string]int {
 
 func TestGuard_Evaluate(t *testing.T) {
 	var localVariables map[string]int = Setup()
-	var g Guard = Guard{3, "<", "a"}
+	var g Guard = Guard{"a", "<", 3}
 	if g.Evaluate(localVariables) != true{
 		t.Errorf("Evaluate function should return true, but returned false")
 	}
 }
 func TestGuard_Evaluate2(t *testing.T) {
 	var localVariables map[string]int = Setup()
-	var g Guard = Guard{3, "<", "b"}
+	var g Guard = Guard{"b", "<", 3}
 	if g.Evaluate(localVariables) == true{
 		t.Errorf("Evaluate function should return false, but returned true")
+	}
+}
+func TestUpdate_Update(t *testing.T) {
+	var localVariables map[string]int = Setup()
+	var u1 Update = Update{"x", "+=", 2}
+	var u2 Update = Update{"x", "+", 2}
+	u1.Update(localVariables)
+	u2.Update(localVariables)
+	if localVariables[u1.variableToUpdate] != localVariables[u2.variableToUpdate]{
+		t.Errorf("'+' and '+=' do not return the same value, but should.")
 	}
 }
