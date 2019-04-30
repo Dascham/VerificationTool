@@ -14,4 +14,4 @@ add_executable(cpp
         src/Model/Model.h
         src/Model/Location.h
         src/Model/Edge.h
-        )
+        src/util.h)
