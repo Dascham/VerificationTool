@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <ostream>
 
 #include "util.h"
 
@@ -13,6 +14,9 @@ struct State {
 
 
 };
+
+bool operator==(const State &a, const State &b);
+std::ostream &operator<<(std::ostream &os, State const &m);
 
 namespace std {
     template <>

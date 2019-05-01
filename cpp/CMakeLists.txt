@@ -14,4 +14,9 @@ add_executable(cpp
         src/Model/Model.h
         src/Model/Location.h
         src/Model/Edge.h
-        src/util.h)
+        src/util.h
+        src/State.cpp)
+
+add_executable(simple_model_checker
+        src/simple_model_checker.cpp
+        src/State.cpp)
