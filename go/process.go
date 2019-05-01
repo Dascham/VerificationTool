@@ -15,3 +15,7 @@ func (p Process) Explore() {
 	//check at either beginning or end whether next (global) state has been seen before
 
 }
+
+func calcthing(x, y int) int{
+	return x+y
+}

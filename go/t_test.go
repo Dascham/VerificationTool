@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 /*
 func TestcalcThing(t *testing.T){
@@ -40,5 +42,16 @@ func TestUpdate_Update(t *testing.T) {
 	u2.Update(localVariables)
 	if localVariables[u1.variableToUpdate] != localVariables[u2.variableToUpdate]{
 		t.Errorf("'+' and '+=' do not return the same value, but should.")
+	}
+}
+
+func TestHash(t *testing.T) {
+	var a string = "aksdksd<jfnjikdfhvjikdvhfjdvh"
+	var b string = "sdkfj<hvuifdhvuizhvfbvhfbvvbvbvbvbvbvbvbvbvbvbvbvbvbvbvbvb"
+
+	c := Hash(a)
+	d := Hash(b)
+	if c == d{
+		t.Errorf("Hash function returns same value of different strings, but should not: '%d' '%d'", c,d)
 	}
 }

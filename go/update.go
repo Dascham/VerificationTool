@@ -17,5 +17,7 @@ func (u Update) Update(localVariables map[string]int){
 		localVariables[u.variableToUpdate] = localVariables[u.variableToUpdate] / u.updateValue
 	case "=":
 		localVariables[u.variableToUpdate] = u.updateValue
+	case "":
+		break
 	}
 }

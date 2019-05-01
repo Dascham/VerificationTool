@@ -1,9 +1,17 @@
 package main
 
+import (
+	"fmt"
+	"strconv"
+)
+
 type Invariant struct {
-	InvariantValue int
-	ComparisonOperator string
 	VariableToEvaluate string
+	ComparisonOperator string
+	InvariantValue int
+}
+func (i Invariant) iPrintln() {
+	fmt.Printf("'%s':'%s':'%s'", i.VariableToEvaluate, i.ComparisonOperator, strconv.Itoa(i.InvariantValue))
 }
 
 func (i Invariant) IsValid(localVariables map[string]int) bool {
@@ -21,6 +29,8 @@ func (i Invariant) IsValid(localVariables map[string]int) bool {
 		if (i.InvariantValue == localVariables[i.VariableToEvaluate]){
 			result = true
 		}
+	case "":
+		result = true
 	}
 	return result
 }

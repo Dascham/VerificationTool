@@ -21,6 +21,8 @@ func (g Guard) Evaluate(localVariables map[string]int) bool{
 		if(localVariables[g.VariableToEvaluate] == g.GuardValue){
 			result = true
 		}
+	case "":
+		result = true
 	default:
 		result = false
 	}
