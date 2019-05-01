@@ -10,7 +10,7 @@ type Location struct{
 	Invariant Invariant
 }
 
-func (l Location) AcceptEdges(args ...Edge){
+func (l Location) AcceptOutGoingEdges(args ...Edge){
 	for i := 0; i < len(args); i++{
 		l.Edges = append(l.Edges, )
 	}
