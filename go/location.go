@@ -17,7 +17,7 @@ func (l Location) AcceptOutGoingEdges(args ...Edge){
 }
 
 func NewLocation(locationName string, i Invariant) Location{
-	var a Location
+	var a Location = Location{}
 	a.LocationName = locationName
 	a.Invariant = i
 	//id stuff
