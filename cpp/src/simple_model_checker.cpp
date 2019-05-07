@@ -4,8 +4,11 @@
 
 #include "util.h"
 #include "State.h"
+#include "model/Model.h"
 
 class SimpleModelChecker {
+    model::Model model;
+
     std::queue<State> stateQueue{};
     std::unordered_set<State> encounteredStates{};
 
@@ -58,6 +61,8 @@ public:
         std::cout << "Generated states: " << generatedCounter << std::endl;
         std::cout << "Duplicate states: " << generatedCounter-exploredCounter << std::endl;
     }
+
+    explicit SimpleModelChecker(model::Model model) : model{std::move(model)} {}
 };
 
 int main() {
@@ -66,7 +71,27 @@ int main() {
                  "You have chosen, or been chosen, to use one of our finest non-distributed model checkers.\n"
               << std::endl;
 
-    SimpleModelChecker simpleModelChecker{};
+    using namespace model;
+
+    constexpr size_t numVars = 1;
+
+    SimpleModelChecker simpleModelChecker{Model{
+        std::vector<int8_t>(numVars), // NOTE: Using parenthesis to create vector of given size
+        {
+            Automaton{{
+                Location{Invariant{}, {
+                    Edge{1, Guard{{}}, Update{{
+                        std::vector<Assignment>{Assignment{1, Assignment::AssignOperator::Assign, Term{Term::Type::Constant, 42}}}
+                    }}},
+
+                }},
+                Location{Invariant{}, {
+                    Edge{0}
+                }}
+            }}/*,
+            Automaton{{}, {}}*/
+        } // Empty vector of automata
+    }};
     simpleModelChecker.checkModel();
 
     return 0;
