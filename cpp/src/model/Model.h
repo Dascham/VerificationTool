@@ -15,12 +15,11 @@ namespace model {
     struct Automaton;
 
     struct Model {
-        std::vector<int8_t> variables;
+        uint8_t numVariables;
         std::vector<Automaton> automata;
 
-        Model(std::vector<int8_t> variables, std::vector<Automaton> automata)
-            : variables{std::move(variables)}, automata{std::move(automata)} {}
-
+        Model(uint8_t numVariables, std::vector<Automaton> automata)
+            : numVariables{numVariables}, automata{std::move(automata)} {}
     };
 
     struct Automaton {

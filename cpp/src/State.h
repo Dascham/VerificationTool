@@ -9,7 +9,7 @@
 
 struct State {
     std::vector<size_t> locations;
-    std::vector<int> variables;
+    std::vector<int8_t> variables;
     // Clocks/Zones/DBM go here
 
 

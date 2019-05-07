@@ -32,7 +32,7 @@ std::ostream &operator<<(std::ostream &os, State const &m) {
             ;
 
     for (auto var : m.variables) {
-        os << std::setw(4) << var << " ";
+        os << std::setw(4) << (int)var << " ";
     }
     os << ">\n"
           "}\n"

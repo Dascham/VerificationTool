@@ -1,6 +1,8 @@
 #ifndef CPP_ABSTRACT_H
 #define CPP_ABSTRACT_H
 
+#include <cassert>
+
 namespace model {
 
     struct Term {
@@ -9,14 +11,17 @@ namespace model {
         };
 
         Type type;
-        int8_t valueOrVariable;
+        int16_t valueOrVariable;
 
-        int8_t operator()(State state) {
+        size_t operator()(State state) {
             switch (type) {
                 case Type::Variable:
+                    assert((size_t)valueOrVariable < state.variables.size());
                     return state.variables[valueOrVariable];
                 case Type::Constant:
                     return valueOrVariable;
+                default:
+                    throw std::domain_error("Invalid Type in Term");
             }
         }
 
@@ -32,7 +37,20 @@ namespace model {
             }
         }*/
 
-        Term(Type type, int8_t valueOrVariable) : type{type}, valueOrVariable{valueOrVariable} {}
+        Term(Type type, int16_t valueOrVariable) : type{type}, valueOrVariable{valueOrVariable} {
+            switch (type) {
+                case Type::Variable:
+                    assert(valueOrVariable >= std::numeric_limits<uint8_t>::min());
+                    assert(valueOrVariable <= std::numeric_limits<uint8_t>::max());
+                    break;
+                case Type::Constant:
+                    assert(valueOrVariable >= std::numeric_limits<int8_t>::min());
+                    assert(valueOrVariable <= std::numeric_limits<int8_t>::max());
+                    break;
+                default:
+                    throw std::domain_error("Invalid Type in Term");
+            }
+        }
     };
 
     struct Assignment {
@@ -41,20 +59,29 @@ namespace model {
         };
         AssignOperator assignOperator;
 
-        int lhsVariable;
+        uint8_t lhsVariable;
         Term rhsTerm;
 
-        Assignment(int lhsVariable, AssignOperator assignOperator, Term rhsTerm)
+        Assignment(uint8_t lhsVariable, AssignOperator assignOperator, Term rhsTerm)
             : lhsVariable{lhsVariable}, assignOperator{assignOperator}, rhsTerm{rhsTerm} {}
 
         State operator()(State state) {
+            const int rhsVal = rhsTerm(state);
+
+            assert(lhsVariable < state.variables.size());
+
+            assert(rhsVal >= std::numeric_limits<int8_t>::min());
+            assert(rhsVal <= std::numeric_limits<int8_t>::max());
 
             switch (assignOperator) {
                 case AssignOperator::Assign:
-                    state.variables[lhsVariable] = rhsTerm(state);
+                    state.variables[lhsVariable] = rhsVal;
                     break;
                 case AssignOperator::IncAssign:
-                    state.variables[lhsVariable] += rhsTerm(state);
+                    assert(rhsVal + state.variables[lhsVariable] >= std::numeric_limits<int8_t>::min());
+                    assert(rhsVal + state.variables[lhsVariable] <= std::numeric_limits<int8_t>::max());
+
+                    state.variables[lhsVariable] += rhsVal;
                     break;
             }
 
@@ -92,6 +119,8 @@ namespace model {
                     return lhsTerm(state) > rhsTerm(state);
                 case ComparisonOperator::GreaterThanEqual:
                     return lhsTerm(state) >= rhsTerm(state);
+                default:
+                    throw std::domain_error("Invalid ComparisonOperator in Predicate");
             }
         }
     };
