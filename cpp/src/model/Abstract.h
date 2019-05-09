@@ -66,7 +66,7 @@ namespace model {
             : lhsVariable{lhsVariable}, assignOperator{assignOperator}, rhsTerm{rhsTerm} {}
 
         State operator()(State state) {
-            const int rhsVal = rhsTerm(state);
+            const int8_t rhsVal = rhsTerm(state);
 
             assert(lhsVariable < state.variables.size());
 
@@ -77,12 +77,18 @@ namespace model {
                 case AssignOperator::Assign:
                     state.variables[lhsVariable] = rhsVal;
                     break;
-                case AssignOperator::IncAssign:
-                    assert(rhsVal + state.variables[lhsVariable] >= std::numeric_limits<int8_t>::min());
-                    assert(rhsVal + state.variables[lhsVariable] <= std::numeric_limits<int8_t>::max());
+                case AssignOperator::IncAssign: {
+                    const int8_t curVal = state.variables[lhsVariable];
+                    const int8_t newVal = rhsVal + state.variables[lhsVariable];
 
-                    state.variables[lhsVariable] += rhsVal;
+                    util::enforceBoundsAddition(curVal, rhsVal,
+                                                "Increment variable[" + std::to_string(lhsVariable) + "]");
+
+                    state.variables[lhsVariable] = newVal;
+                }
                     break;
+                default:
+                    throw std::domain_error("Invalid AssignmentOperator in Assignment");
             }
 
             return state;

@@ -8,6 +8,12 @@
 
 namespace model {
 
+    struct Guard;
+    struct Update;
+    struct Sync;
+
+    struct Edge;
+
     struct Guard{
         std::vector<Predicate> predicates;
 
@@ -36,15 +42,28 @@ namespace model {
         explicit Update(std::vector<Assignment> assignments = {}) : assignments{std::move(assignments)} {}
     };
 
+    struct Sync {
+        enum class Type {
+            None,
+            Send,
+            Recv
+        };
+
+        Type type;
+        uint8_t channel;
+
+        explicit Sync(Type type = Type::None, uint8_t channel = 0) : type{type}, channel{channel} {}
+    };
+
     struct Edge{
         size_t destination;
 
         Guard guard;
         Update update;
-        //Sync sync;
+        Sync sync;
 
-        explicit Edge(size_t destination, Guard guard = Guard{}, Update update = Update{})
-            : destination{destination}, guard{std::move(guard)}, update{std::move(update)} {}
+        explicit Edge(size_t destination, Guard guard = Guard{}, Update update = Update{}, Sync sync = Sync{})
+            : destination{destination}, guard{std::move(guard)}, update{std::move(update)}, sync{sync} {}
     };
 
 }

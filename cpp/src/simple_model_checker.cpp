@@ -45,19 +45,22 @@ class SimpleModelChecker {
     }
 
     size_t generateSuccessors(const State &state) {
+        using namespace model;
+
         size_t count = 0;
         for (int i = 0; i < model.automata.size(); ++i) { // For each automaton
-            const model::Automaton &automaton = model.automata[i];
+            const Automaton &automaton = model.automata[i];
 
             const size_t loc_i = state.locations[i];
-            const model::Location &loc = automaton.locations[loc_i];
+            const Location &loc = automaton.locations[loc_i];
 
+            // TODO: use indexed for loop to catch edge number in case of exception(model error)
             for (const auto& edge : loc.edges) { // For each edge from the current location in the automaton
 
                 // Guard
                 if (edge.guard(state)) { // If guard is satisfied in the current state
 
-                    // TODO: Find Sync partner here if needed? Or just perform update, then use old state to find partner
+                    if (edge.sync.type == Sync::Type::Recv) continue; // Nothing to do here
 
                     // Update
                     State newState = edge.update(state);
@@ -67,11 +70,42 @@ class SimpleModelChecker {
                     assert(newState.locations.size() == state.locations.size());
                     assert(newState.variables.size() == state.variables.size());
 
-                    // Invariants for new state
-                    if (checkInvariants(newState)) {
-                        addNewState(newState);
-                        count++;
-                    } // TODO: count both valid and non valid states
+                    if (edge.sync.type == Sync::Type::Send) {
+                        for (int j = 0; j < model.automata.size(); ++j) { // For each automaton
+                            const Automaton &syncedAutomaton = model.automata[j];
+
+                            const size_t syncedLoc_j = state.locations[j];
+                            const Location &syncedLoc = syncedAutomaton.locations[syncedLoc_j];
+
+                            // TODO: use indexed for loop to catch edge number in case of exception(model error)
+                            for (auto &syncedEdge : syncedLoc.edges) {
+                                if (syncedEdge.sync.type == Sync::Type::Recv &&
+                                    syncedEdge.sync.channel == edge.sync.channel &&
+                                    syncedEdge.guard(state)) // Check if guard was satisfied in the old state
+                                {
+
+                                    State syncedState = syncedEdge.update(newState);
+                                    syncedState.locations[j] = syncedEdge.destination;
+
+                                    assert(syncedEdge.destination < syncedAutomaton.locations.size());
+                                    assert(syncedState.locations.size() == state.locations.size());
+                                    assert(syncedState.variables.size() == state.variables.size());
+
+                                    if (checkInvariants(syncedState)) {
+                                        addNewState(syncedState);
+                                        count++;
+                                    } // TODO: count both valid and non valid states
+                                }
+                            }
+                        }
+                    } else {
+
+                        // Invariants for new state TODO: DRY
+                        if (checkInvariants(newState)) {
+                            addNewState(newState);
+                            count++;
+                        } // TODO: count both valid and non valid states
+                    }
                 }
             }
         }
@@ -132,7 +166,7 @@ int main() {
                     Edge{1, Guard{{
                         Predicate{Term{Term::Type::Variable, 0}, Predicate::ComparisonOperator::LessThan, Term{Term::Type::Constant, 127}}
                     }}, Update{{
-                        {Assignment{0, Assignment::AssignOperator::IncAssign, Term{Term::Type::Constant, 1}}}
+                        Assignment{0, Assignment::AssignOperator::IncAssign, Term{Term::Type::Constant, 1}}
                     }}},
 
                 }},
