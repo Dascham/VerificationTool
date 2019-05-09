@@ -20,4 +20,5 @@ add_executable(cpp
 
 add_executable(simple_model_checker
         src/simple_model_checker.cpp
-        src/State.cpp)
+        src/State.cpp
+        src/modelcheckers/SimpleModelChecker.h)
