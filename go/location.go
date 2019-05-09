@@ -12,7 +12,7 @@ type Location struct{
 
 func (l Location) AcceptOutGoingEdges(args ...Edge){
 	for i := 0; i < len(args); i++{
-		l.Edges = append(l.Edges, )
+		l.Edges = append(l.Edges, args[i])
 	}
 }
 

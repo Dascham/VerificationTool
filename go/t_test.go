@@ -13,7 +13,7 @@ func SetupMap() map[string]int {
 
 //a template with a single location, no edges etc.
 func SetupTemplate() Template{
-	var template Template = Template{SetupMap(), &Location{}}
+	var template Template = Template{SetupMap(), &Location{}, &Location{}}
 	var location Location = NewLocation("L0", Invariant{"x", "<", 20})
 	template.InitialLocation = &location
 	return template

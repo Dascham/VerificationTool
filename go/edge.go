@@ -45,3 +45,9 @@ func (e Edge) EdgeIsActive(localVariables map[string]int) bool{
 		}
 	return result
 }
+
+func (e Edge) AtomicUpdate(localVariables map[string]int) {
+	for i:=0;i<len(e.Update);i++{
+		e.Update[i].Update(localVariables)
+	}
+}
