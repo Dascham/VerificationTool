@@ -19,6 +19,26 @@ func SetupTemplate() Template{
 	return template
 }
 
+func SetupCounterModel() Template{
+	var localVariables map[string]int = map[string]int{"x":0}
+	var template Template
+	template.LocalVariables = localVariables
+	var location0 Location = NewLocation("L0", Invariant{})
+	template.InitialLocation = &location0
+
+	//update
+	var update Update = Update{"x", "++", 0}
+	//edge
+	var edge Edge = Edge{}
+	edge.InitializeEdge()
+	edge.AcceptUpdates(update)
+	edge.AssignSrcDst(location0, location0)
+
+	location0.AcceptOutGoingEdges(edge)
+
+	return template
+}
+
 func SetupFullModel() Template{
 	//have global mutex, in order to change global state,
 	// although not necessary for passed and waiting list implementation
