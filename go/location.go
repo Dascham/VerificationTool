@@ -1,6 +1,6 @@
 package main
 
-const defaultEdgeAllocation int = 3
+const defaultEdgeAllocation = 1
 var uniqueid int = 0
 
 type Location struct{
@@ -11,13 +11,14 @@ type Location struct{
 }
 
 func (l Location) AcceptOutGoingEdges(args ...Edge){
-	for i := 0; i < len(args); i++{
-		l.Edges = append(l.Edges, args[i])
+	
+	for _, value := range args{
+		l.Edges = append(l.Edges, value)
 	}
 }
 
 func NewLocation(locationName string, i Invariant) Location{
-	var a Location = Location{}
+	var a Location
 	a.LocationName = locationName
 	a.Invariant = i
 	//id stuff

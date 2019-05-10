@@ -10,32 +10,32 @@ func main(){
 	var s1 State = State{}
 	s.allTemplates = make([]Template, 2)
 
-	var t Template = MainSetupCounterModel()
+	var template1 Template = MainSetupCounterModel()
+	var template2 Template = MainSetupCounterModel()
 
-	s.allTemplates = append(s.allTemplates, t)
+	s.allTemplates = append(s.allTemplates, template1)
+	s.allTemplates = append(s.allTemplates, template2)
 	s.globalVariables = MainSetupMap()
+
+
+	println(len(template1.InitialLocation.Edges))
 
 	s1 = s
 	println(s.allTemplates[0].LocalVariables["x"])
 	println(s1.allTemplates[0].LocalVariables["x"])
 
+
 	var newMap map[string]int = make(map[string]int)
 	for key, value := range s1.allTemplates[0].LocalVariables {
 		newMap[key] = value
 	}
-	s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(newMap)
+
+	//s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(newMap)
 	//s1.allTemplates[0].LocalVariables = newMap
 
 	println(s.allTemplates[0].LocalVariables["x"])
 	println(s1.allTemplates[0].LocalVariables["x"])
-	/*
-	var mylist []State = make([]State, 2)
-	mylist = append(mylist, s)
 
-	//create new state
-	s.allTemplates[0].currentLocation = s.allTemplates[0].InitialLocation
-	s.allTemplates[0].currentLocation.Edges[0].Update
-	*/
 }
 func remove(a []State, i int) []State {
 	a[i] = a[len(a)-1] // Copy last element to index i.
@@ -81,7 +81,7 @@ func MainSetupCounterModel() Template{
 
 	var location0 Location = NewLocation("L0", Invariant{})
 	template.InitialLocation = &location0
-
+	template.currentLocation = &location0
 	//update
 	var update Update = Update{"x", "++", 0}
 	//edge
@@ -90,7 +90,12 @@ func MainSetupCounterModel() Template{
 	edge.AcceptUpdates(update)
 	edge.AssignSrcDst(location0, location0)
 
-	location0.AcceptOutGoingEdges(edge)
+	var edge0 Edge = Edge{}
+	var edge1 Edge = Edge{}
+	location0.Edges = append(location0.Edges, edge)
+	location0.Edges = append(location0.Edges, edge0)
+	location0.Edges = append(location0.Edges, edge1)
+	//location0.AcceptOutGoingEdges(edge, edge0, edge1)
 
 	return template
 }
