@@ -5,6 +5,7 @@
 
 #include "model/Model.h"
 #include "modelcheckers/SimpleModelChecker.h"
+#include "modelcheckers/DistributedModelChecker.h"
 
 int main() {
     std::cout << "Welcome. Welcome to the simple_model_checker.\n"
@@ -17,7 +18,7 @@ int main() {
 
     constexpr size_t numVars = 1;
 
-    SimpleModelChecker simpleModelChecker{Model{
+    DistributedModelChecker simpleModelChecker{Model{
         numVars,
         {
             Automaton{{

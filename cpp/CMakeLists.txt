@@ -18,7 +18,15 @@ add_executable(cpp
         src/util.h
         src/State.cpp)
 
-add_executable(simple_model_checker
+
+add_executable(distributed_model_checker
         src/simple_model_checker.cpp
         src/State.cpp
-        src/modelcheckers/SimpleModelChecker.h)
+        src/modelcheckers/SimpleModelChecker.h
+        src/modelcheckers/DistributedModelChecker.h src/modelcheckers/BaseModelChecker.h src/modelcheckers/BaseModelChecker.cpp)
+
+
+
+#set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(distributed_model_checker Threads::Threads)
