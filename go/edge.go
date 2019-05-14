@@ -9,30 +9,35 @@ type Edge struct {
 	Ch string
 	IsSend bool
 	Update []Update
+	name string
 }
 
 //! is send
 //? is receive
 
-func (e Edge) InitializeEdge(){
-	e.Guard = make([]Guard, 2)
-	e.Update = make([]Update, 2)
+func (e Edge) InitializeEdge() Edge{
+	e.Guard = make([]Guard, 0, 0)
+	e.Update = make([]Update, 0, 0)
+	return e
 }
 
-func (e Edge) AcceptUpdates(args ...Update){
+func (e Edge) AcceptUpdates(args ...Update) Edge{
 	for i := 0; i < len(args); i++{
 		e.Update = append(e.Update, args[i])
 	}
+	return e
 }
-func (e Edge) AcceptGuards(args ...Guard){
+func (e Edge) AcceptGuards(args ...Guard) Edge{
 	for i := 0; i < len(args); i++{
 		e.Guard = append(e.Guard, args[i])
 	}
+	return e
 }
 
-func (e Edge) AssignSrcDst(src Location, dst Location){
+func (e Edge) AssignSrcDst(src Location, dst Location) Edge{
 	e.Src = &src
 	e.Dst = &dst
+	return e
 }
 
 func (e Edge) EdgeIsActive(localVariables map[string]int) bool{
@@ -46,8 +51,9 @@ func (e Edge) EdgeIsActive(localVariables map[string]int) bool{
 	return result
 }
 
-func (e Edge) AtomicUpdate(localVariables map[string]int) {
+func (e Edge) AtomicUpdate(localVariables map[string]int) Edge{
 	for i:=0;i<len(e.Update);i++{
 		e.Update[i].Update(localVariables)
 	}
+	return e
 }

@@ -1,6 +1,6 @@
 package main
 
-const defaultEdgeAllocation = 1
+const defaultEdgeAllocation = 5
 var uniqueid int = 0
 
 type Location struct{
@@ -10,11 +10,11 @@ type Location struct{
 	Invariant Invariant
 }
 
-func (l Location) AcceptOutGoingEdges(args ...Edge){
-	
-	for _, value := range args{
-		l.Edges = append(l.Edges, value)
+func (l Location) AcceptOutGoingEdges(args ...Edge) Location{
+	for i := 0; i < len(args); i++{
+		l.Edges[i] = args[i]
 	}
+	return l
 }
 
 func NewLocation(locationName string, i Invariant) Location{
@@ -26,7 +26,7 @@ func NewLocation(locationName string, i Invariant) Location{
 	uniqueid++
 
 	//initialize slice edges
-	a.Edges = make([]Edge, defaultEdgeAllocation)
+	a.Edges = make([]Edge, 0, 0)
 
 	return a
 }

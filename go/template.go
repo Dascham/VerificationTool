@@ -9,6 +9,7 @@ type Template struct {
 	LocalVariables  map[string]int
 	InitialLocation *Location
 	currentLocation *Location
+	tempName string
 }
 
 //tostring, such that we can hash a template, which should be done only once,

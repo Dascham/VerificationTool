@@ -1,6 +1,9 @@
 package main
 
-import "hash/fnv"
+import (
+	"fmt"
+	"hash/fnv"
+)
 
 const MaxValue = 128
 const MinValue = -127
@@ -8,7 +11,8 @@ const MinValue = -127
 func main(){
 	var s State = State{}
 	var s1 State = State{}
-	s.allTemplates = make([]Template, 2)
+	s.allTemplates = make([]Template, 0, 0)
+
 
 	var template1 Template = MainSetupCounterModel()
 	var template2 Template = MainSetupCounterModel()
@@ -17,21 +21,22 @@ func main(){
 	s.allTemplates = append(s.allTemplates, template2)
 	s.globalVariables = MainSetupMap()
 
-
-	println(len(template1.InitialLocation.Edges))
-
+	fmt.Println("print: ", s.allTemplates[0].InitialLocation.Edges[0].Src.LocationName)
+	println(template1.InitialLocation.LocationName)
 	s1 = s
 	println(s.allTemplates[0].LocalVariables["x"])
 	println(s1.allTemplates[0].LocalVariables["x"])
-
 
 	var newMap map[string]int = make(map[string]int)
 	for key, value := range s1.allTemplates[0].LocalVariables {
 		newMap[key] = value
 	}
 
-	//s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(newMap)
+	//println(s1.allTemplates[0])
+	//s1.allTemplates[0].InitialLocation.Edges[0].IsSend = true
 	//s1.allTemplates[0].LocalVariables = newMap
+
+
 
 	println(s.allTemplates[0].LocalVariables["x"])
 	println(s1.allTemplates[0].LocalVariables["x"])
@@ -75,28 +80,25 @@ func MainSetupCounterModel() Template{
 	var localVariables map[string]int = make(map[string]int)
 	localVariables["x"] = 0
 
-	var template Template
-	template.LocalVariables = make(map[string]int)
+	var template Template = Template{}
+	template.tempName = "name"
+	//template.LocalVariables = make(map[string]int)
 	template.LocalVariables = localVariables
 
 	var location0 Location = NewLocation("L0", Invariant{})
 	template.InitialLocation = &location0
 	template.currentLocation = &location0
+
 	//update
 	var update Update = Update{"x", "++", 0}
 	//edge
 	var edge Edge = Edge{}
-	edge.InitializeEdge()
-	edge.AcceptUpdates(update)
-	edge.AssignSrcDst(location0, location0)
-
-	var edge0 Edge = Edge{}
-	var edge1 Edge = Edge{}
-	location0.Edges = append(location0.Edges, edge)
-	location0.Edges = append(location0.Edges, edge0)
-	location0.Edges = append(location0.Edges, edge1)
-	//location0.AcceptOutGoingEdges(edge, edge0, edge1)
-
+	edge = edge.InitializeEdge()
+	edge = edge.AcceptUpdates(update)
+	edge = edge.AssignSrcDst(location0, location0)
+	edge.name = "edge name"
+	//location0.Edges = append(location0.Edges, edge)
+	location0.AcceptOutGoingEdges(edge)
 	return template
 }
 
