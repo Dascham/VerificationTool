@@ -24,9 +24,10 @@ int main() {
             Automaton{{
                 Location{Invariant{}, {
                     Edge{1, Guard{{
-                        Predicate{Term{Term::Type::Variable, 0}, Predicate::ComparisonOperator::LessThan, Term{Term::Type::Constant, 127}}
+                        Predicate{Term{Term::Type::Variable, 0}, Predicate::ComparisonOperator::LessThan, Term{Term::Type::Constant, 127}},
+                        Predicate{Term{Term::Type::Variable, 0}, Predicate::ComparisonOperator::GreaterThan, Term{Term::Type::Constant, -128}}
                     }}, Update{{
-                        Assignment{0, Assignment::AssignOperator::IncAssign, Term{Term::Type::Constant, 1}}
+                        Assignment{0, Assignment::AssignOperator::IncAssign, Term{Term::Type::Constant, -1}}
                     }}},
 
                 }},
