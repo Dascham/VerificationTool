@@ -13,7 +13,7 @@ func SetupMap() map[string]int {
 
 //a template with a single location, no edges etc.
 func SetupTemplate() Template{
-	var template Template = Template{SetupMap(), &Location{}, &Location{}}
+	var template Template = Template{SetupMap(), &Location{}, &Location{}, "tempname"}
 	var location Location = NewLocation("L0", Invariant{"x", "<", 20})
 	template.InitialLocation = &location
 	return template
@@ -34,7 +34,7 @@ func SetupCounterModel() Template{
 	edge.AcceptUpdates(update)
 	edge.AssignSrcDst(location0, location0)
 
-	location0.AcceptOutGoingEdges(edge)
+	location0 = location0.AcceptOutGoingEdges(edge)
 
 	return template
 }
@@ -150,7 +150,7 @@ func TestTemplate_ToString(t *testing.T) {
 		t.Errorf("Got: %s --- expected: %s", s, expected)
 	}
 }
-/*
+
 func TestLocation_AcceptOutGoingEdges(t *testing.T) {
 	var l0 Location = NewLocation("L0", Invariant{})
 	var l1 Location = NewLocation("L1", Invariant{})
@@ -158,15 +158,40 @@ func TestLocation_AcceptOutGoingEdges(t *testing.T) {
 	l0.Edges = append(l0.Edges, Edge{})
 	l0.Edges = append(l0.Edges, Edge{})
 
-	l1.AcceptOutGoingEdges(Edge{}, Edge{}, Edge{})
+	l1 = l1.AcceptOutGoingEdges(Edge{}, Edge{}, Edge{})
 
 	if len(l0.Edges) != len(l1.Edges) {
 		t.Errorf("function accept outgoing edges does not work")
 	}
-	println("Len 0: ",cap(l0.Edges))
-	println("Len 1: ", cap(l1.Edges))
+
+	//println("Len 0: ",len(l0.Edges))
+	//println("Len 1: ", len(l1.Edges))
 }
-*/
+
+func TestCopyMap(t *testing.T) {
+	var map1 map[string]int = make(map[string]int)
+	//var map2 map[string]int
+	map1["x"] = 2
+	map2 := CopyMap(map1)
+	map2["x"] = 5
+	if map1["x"] == map2["x"]{
+		t.Errorf("copymap does not work")
+	}
+}
+
+func TestDeepCopyState(t *testing.T) {
+	var temp Template = SetupCounterModel()
+	var s State = State{}
+	s.allTemplates = make([]Template, 0,0)
+	s.globalVariables = SetupMap()
+	s.allTemplates = append(s.allTemplates, temp)
+
+	copy_s := DeepCopyState(s)
+	copy_s.globalVariables["a"] = 17
+	if copy_s.globalVariables["a"] == s.globalVariables["a"]{
+		t.Errorf("deepcopystate does not work, prolly a reference thing")
+	}
+}
 
 func TestHash(t *testing.T) {
 	var a string = "aksdksd<jfnjikdfhvjikdvhfjdvh"

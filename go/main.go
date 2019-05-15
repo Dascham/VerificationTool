@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"hash/fnv"
 )
 
@@ -21,22 +20,17 @@ func main(){
 	s.allTemplates = append(s.allTemplates, template2)
 	s.globalVariables = MainSetupMap()
 
-	fmt.Println("print: ", s.allTemplates[0].InitialLocation.Edges[0].Src.LocationName)
-	println(template1.InitialLocation.LocationName)
 	s1 = s
 	println(s.allTemplates[0].LocalVariables["x"])
-	println(s1.allTemplates[0].LocalVariables["x"])
+	println(s.allTemplates[1].LocalVariables["x"])
 
 	var newMap map[string]int = make(map[string]int)
-	for key, value := range s1.allTemplates[0].LocalVariables {
+	for key, value := range s.allTemplates[0].LocalVariables {
 		newMap[key] = value
 	}
 
-	//println(s1.allTemplates[0])
-	//s1.allTemplates[0].InitialLocation.Edges[0].IsSend = true
-	//s1.allTemplates[0].LocalVariables = newMap
-
-
+	s.allTemplates[0].LocalVariables = newMap
+	s.allTemplates[0].InitialLocation.Edges[0] = s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(newMap)
 
 	println(s.allTemplates[0].LocalVariables["x"])
 	println(s1.allTemplates[0].LocalVariables["x"])
@@ -75,7 +69,6 @@ func Hash(s string) uint32 {
 	return h.Sum32()
 }
 
-
 func MainSetupCounterModel() Template{
 	var localVariables map[string]int = make(map[string]int)
 	localVariables["x"] = 0
@@ -97,8 +90,8 @@ func MainSetupCounterModel() Template{
 	edge = edge.AcceptUpdates(update)
 	edge = edge.AssignSrcDst(location0, location0)
 	edge.name = "edge name"
-	//location0.Edges = append(location0.Edges, edge)
-	location0.AcceptOutGoingEdges(edge)
+
+	location0 = location0.AcceptOutGoingEdges(edge)
 	return template
 }
 
@@ -115,4 +108,15 @@ func CopyMap(originalMap map[string]int) map[string]int{
 		newMap[key] = value
 	}
 	return newMap
+}
+
+func DeepCopyState(s State) State{
+	var newState State = s
+	newState.globalVariables = CopyMap(s.globalVariables)
+
+	for i := 0; i<len(s.allTemplates);i++ {
+		newState.allTemplates[i].LocalVariables = CopyMap(s.allTemplates[i].LocalVariables)
+	}
+
+	return newState
 }
