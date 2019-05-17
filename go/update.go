@@ -6,7 +6,6 @@ type Update struct {
 	updateValue int
 }
 func (u Update) Update(newMap map[string]int) {
-	//var newMap = CopyMap(localVariables)
 	switch u.operator {
 	case "+", "+=":
 		newMap[u.variableToUpdate] = newMap[u.variableToUpdate] + u.updateValue

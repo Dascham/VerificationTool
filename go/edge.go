@@ -43,6 +43,15 @@ func (e Edge) AssignSrcDst(src Location, dst Location) Edge{
 func (e Edge) EdgeIsActive(localVariables map[string]int) bool{
 	var result bool = false
 	for i := 0; i < len(e.Guard); i++ {
+		if(e.Guard[i].Evaluate(localVariables)){
+
+		} else{
+			return false
+		}
+		//eval channels
+
+		//then eval dst invariant, where we need to update first, and then check if invariant valid
+
 		if (e.Guard[i].Evaluate(localVariables) &&
 			e.Dst.Invariant.IsValid(localVariables)) { //add one more for chan
 			result = true

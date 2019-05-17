@@ -1,6 +1,6 @@
 package main
 
-const defaultEdgeAllocation = 5
+const defaultEdgeAllocation = 0
 var uniqueid int = 0
 
 type Location struct{

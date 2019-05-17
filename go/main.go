@@ -8,32 +8,7 @@ const MaxValue = 128
 const MinValue = -127
 
 func main(){
-	var s State = State{}
-	var s1 State = State{}
-	s.allTemplates = make([]Template, 0, 0)
 
-
-	var template1 Template = MainSetupCounterModel()
-	var template2 Template = MainSetupCounterModel()
-
-	s.allTemplates = append(s.allTemplates, template1)
-	s.allTemplates = append(s.allTemplates, template2)
-	s.globalVariables = MainSetupMap()
-
-	s1 = s
-	println(s.allTemplates[0].LocalVariables["x"])
-	println(s.allTemplates[1].LocalVariables["x"])
-
-	var newMap map[string]int = make(map[string]int)
-	for key, value := range s.allTemplates[0].LocalVariables {
-		newMap[key] = value
-	}
-
-	s.allTemplates[0].LocalVariables = newMap
-	s.allTemplates[0].InitialLocation.Edges[0] = s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(newMap)
-
-	println(s.allTemplates[0].LocalVariables["x"])
-	println(s1.allTemplates[0].LocalVariables["x"])
 
 }
 func remove(a []State, i int) []State {
@@ -111,7 +86,14 @@ func CopyMap(originalMap map[string]int) map[string]int{
 }
 
 func DeepCopyState(s State) State{
-	var newState State = s
+	var newState State = State{}
+	newState.allTemplates = make([]Template, 0,0)
+
+	//copy templates
+	for i := 0; i<len(s.allTemplates);i++{
+		newState.allTemplates = append(newState.allTemplates, s.allTemplates[i])
+	}
+
 	newState.globalVariables = CopyMap(s.globalVariables)
 
 	for i := 0; i<len(s.allTemplates);i++ {
