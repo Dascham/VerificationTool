@@ -8,35 +8,71 @@ const MaxValue = 128
 const MinValue = -127
 
 func main(){
+	var initialState State = State{}
+	initialState.allTemplates = make([]Template, 0,0)
+	initialState.allTemplates = append(initialState.allTemplates, MainSetupCounterModel())
 
+	var list []State = Explore(initialState)
 
+	for i := 0; i < len(list);i++{
+		println(list[i].ToString())
+	}
 }
+
+
 func remove(a []State, i int) []State {
 	a[i] = a[len(a)-1] // Copy last element to index i.
-	a[len(a)-1] = State{}   // Erase last element (write zero value).
+	a[len(a)-1] = State{} // Erase last element (write zero value).
 	a = a[:len(a)-1]   //truncate slice
 
 	return a
 }
 
-/*
 func Explore(initialState State) []State{
-	var waitingList []State = make([]State, 10000) //dunno how big should be, but many states
+	var waitingList []State = make([]State, 0,0) //size zero, always, cause append fixes size by itself
 	waitingList = append(waitingList, initialState)
-	var passedList []State = make([]State, 10000)
+
+	var passedList []State = make([]State, 0,0)
 
 	for len(waitingList) > 0 { //exploration loop
+		println("First print")
 		var currentState = waitingList[0]
-		for i := 0; i < len(currentState.allTemplates);i++ {
-			currentState.allTemplates[i].InitialLocation.
+		//remove the element
+		waitingList = remove(waitingList, 0)
+		for i := 0;i < len(currentState.allTemplates);i++{
+			println("second for loop?")
+			println(len(currentState.allTemplates[i].currentLocation.Edges))
+			for j := 0 ; j < len(currentState.allTemplates[i].currentLocation.Edges); j++{
+				println("Third for loop?")
+				println(currentState.allTemplates[i].currentLocation.Edges[j].EdgeIsActive(currentState.allTemplates[i].LocalVariables))
+				if (currentState.allTemplates[i].currentLocation.Edges[j].EdgeIsActive(currentState.allTemplates[i].LocalVariables)){
+					//have to instantiate new state here
+					newState := DeepCopyState(currentState)
+					println("We here now")
+					//do update on new state
+					newState.allTemplates[i].currentLocation.Edges[j].AtomicUpdate(newState.allTemplates[i].LocalVariables)
+					//then advance location, by looking to dst of edge that we took
+					newState.allTemplates[i].currentLocation = newState.allTemplates[i].currentLocation.Edges[j].Dst
+					//add newstate to waitinglist, for distributed, call distribute function, which hashes and does stuff
+					//add only if map is valid, this should be made to better fix
+					if (ValidMap(newState.allTemplates[i].LocalVariables)) {
+						println("we here?")
+						waitingList = append(waitingList, newState)
+					}
+				}
+			}
 		}
+		//now we have tried everything that is possible for this state, therefore add to passed list
+		passedList = append(passedList, currentState)
 	}
-
-
 	return passedList
 }
 
- */
+//helper function, for finding an synchronization partner for an edge
+func FindSync(e Edge) (bool, Edge){
+
+	return false, Edge{}
+}
 
 func Hash(s string) uint32 {
 	h := fnv.New32a()
@@ -45,14 +81,9 @@ func Hash(s string) uint32 {
 }
 
 func MainSetupCounterModel() Template{
-	var localVariables map[string]int = make(map[string]int)
-	localVariables["x"] = 0
-
+	var localVariables map[string]int = map[string]int{"x":0}
 	var template Template = Template{}
-	template.tempName = "name"
-	//template.LocalVariables = make(map[string]int)
 	template.LocalVariables = localVariables
-
 	var location0 Location = NewLocation("L0", Invariant{})
 	template.InitialLocation = &location0
 	template.currentLocation = &location0
@@ -63,8 +94,7 @@ func MainSetupCounterModel() Template{
 	var edge Edge = Edge{}
 	edge = edge.InitializeEdge()
 	edge = edge.AcceptUpdates(update)
-	edge = edge.AssignSrcDst(location0, location0)
-	edge.name = "edge name"
+	edge = edge.AssignSrcDst(&location0, &location0)
 
 	location0 = location0.AcceptOutGoingEdges(edge)
 	return template
@@ -87,12 +117,16 @@ func CopyMap(originalMap map[string]int) map[string]int{
 
 func DeepCopyState(s State) State{
 	var newState State = State{}
-	newState.allTemplates = make([]Template, 0,0)
+	//newState.allTemplates = s.allTemplates
 
+	//old way
+	newState.allTemplates = make([]Template, 0,0)
 	//copy templates
+
 	for i := 0; i<len(s.allTemplates);i++{
 		newState.allTemplates = append(newState.allTemplates, s.allTemplates[i])
 	}
+
 
 	newState.globalVariables = CopyMap(s.globalVariables)
 
@@ -101,4 +135,10 @@ func DeepCopyState(s State) State{
 	}
 
 	return newState
+}
+
+func UpdateLocation(t Template, l *Location)Template{
+	t.currentLocation = l
+
+	return t
 }

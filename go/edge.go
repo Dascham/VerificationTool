@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 //an edge consists of src node, dst node, a possible guard, a possible synchronization,
 // and a possible update on local or global variables.
 type Edge struct {
@@ -34,30 +36,46 @@ func (e Edge) AcceptGuards(args ...Guard) Edge{
 	return e
 }
 
-func (e Edge) AssignSrcDst(src Location, dst Location) Edge{
-	e.Src = &src
-	e.Dst = &dst
+func (e Edge) AssignSrcDst(src *Location, dst *Location) Edge{
+	e.Src = src
+	e.Dst = dst
 	return e
 }
 
 func (e Edge) EdgeIsActive(localVariables map[string]int) bool{
-	var result bool = false
+	var tempMap = CopyMap(localVariables)
+	var result bool = true
 	for i := 0; i < len(e.Guard); i++ {
-		if(e.Guard[i].Evaluate(localVariables)){
-
-		} else{
+		if (!e.Guard[i].Evaluate(localVariables)) {
 			return false
 		}
-		//eval channels
+	}
+	//eval channels, not done yet
 
-		//then eval dst invariant, where we need to update first, and then check if invariant valid
-
-		if (e.Guard[i].Evaluate(localVariables) &&
-			e.Dst.Invariant.IsValid(localVariables)) { //add one more for chan
-			result = true
-			}
+	//then eval dst invariant, where we need to update first, and then check if invariant valid
+	e.AtomicUpdate(tempMap)
+	if (!e.Dst.Invariant.IsValid(tempMap)) { //add one more for chan
+			return false
 		}
 	return result
+}
+
+func ValidMap(a map[string]int) bool{
+	for _,value := range a{
+		if (ValidValue(value)){
+
+		} else {
+			return false
+		}
+	}
+	return true
+}
+func ValidValue(a int) bool{
+	if (MinValue < a && a < MaxValue){
+		return true
+	}else {
+		return false
+	}
 }
 
 func (e Edge) AtomicUpdate(localVariables map[string]int) Edge{
@@ -65,4 +83,15 @@ func (e Edge) AtomicUpdate(localVariables map[string]int) Edge{
 		e.Update[i].Update(localVariables)
 	}
 	return e
+}
+func (e Edge) ToString()string{
+	var sb strings.Builder
+	for i := 0; i < len(e.Guard);i++ {
+		sb.WriteString(e.Guard[i].ToString())
+	}
+	for j:=0; j<len(e.Update);j++{
+		sb.WriteString(e.Update[j].ToString())
+	}
+
+	return sb.String()
 }

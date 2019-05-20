@@ -20,6 +20,5 @@ func (s State) ToString() string{
 	for _, value := range s.globalVariables{
 		sb.WriteString(strconv.Itoa(value))
 	}
-
 	return sb.String()
 }

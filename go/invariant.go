@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type Invariant struct {
@@ -16,6 +17,13 @@ func (i Invariant) iPrintln() {
 
 func (i Invariant) IsValid(localVariables map[string]int) bool {
 	result := false
+
+	if (MinValue < localVariables[i.VariableToEvaluate] && localVariables[i.VariableToEvaluate] < MaxValue){
+
+	} else {
+		return false
+	}
+
 	switch i.ComparisonOperator {
 	case "<":
 		if (i.InvariantValue < localVariables[i.VariableToEvaluate]) {
@@ -33,4 +41,13 @@ func (i Invariant) IsValid(localVariables map[string]int) bool {
 		result = true
 	}
 	return result
+}
+
+func (i Invariant) ToString()string{
+	var sb strings.Builder
+	sb.WriteString(i.VariableToEvaluate)
+	sb.WriteString(i.ComparisonOperator)
+	sb.WriteString(strconv.Itoa(i.InvariantValue))
+	sb.WriteString("\n")
+	return sb.String()
 }

@@ -8,6 +8,13 @@ func SetupMap() map[string]int {
 	var localVariables map[string]int = make(map[string]int)
 	localVariables["a"] = 2
 	localVariables["b"] = 7
+	//localVariables["x"] = 0
+	return localVariables
+}
+func SetupInvalidMap() map[string]int {
+	var localVariables map[string]int = make(map[string]int)
+	localVariables["c"] = -129
+	localVariables["d"] = 135
 	return localVariables
 }
 
@@ -25,6 +32,7 @@ func SetupCounterModel() Template{
 	template.LocalVariables = localVariables
 	var location0 Location = NewLocation("L0", Invariant{})
 	template.InitialLocation = &location0
+	template.currentLocation = &location0
 
 	//update
 	var update Update = Update{"x", "++", 0}
@@ -32,13 +40,24 @@ func SetupCounterModel() Template{
 	var edge Edge = Edge{}
 	edge = edge.InitializeEdge()
 	edge = edge.AcceptUpdates(update)
-	edge = edge.AssignSrcDst(location0, location0)
-
+	edge = edge.AssignSrcDst(&location0, &location0)
 	location0 = location0.AcceptOutGoingEdges(edge)
 
 	return template
 }
 
+//this test should be the first test to call the function SetupTemplate(), otherwise it will fail
+func TestTemplate_ToString(t *testing.T) {
+	var template Template = SetupTemplate()
+	var expected string = "027"
+	var s string = template.ToString()
+
+	if (s != expected) {
+		t.Errorf("Got: %s --- expected: %s", s, expected)
+	}
+}
+
+/*
 func SetupFullModel() Template{
 	//have global mutex, in order to change global state,
 	// although not necessary for passed and waiting list implementation
@@ -115,23 +134,13 @@ func SetupFullModel() Template{
 
 	return template
 }
+*/
 
 func TestGuard_Evaluate(t *testing.T) {
 	var localVariables map[string]int = SetupMap()
 	var g Guard = Guard{"a", "<", 3}
 	if g.Evaluate(localVariables) != true{
 		t.Errorf("Evaluate function should return true, but returned false")
-	}
-}
-
-//this test should be the first test to call the function SetupTemplate(), otherwise it will fail
-func TestTemplate_ToString(t *testing.T) {
-	var template Template = SetupTemplate()
-	var expected string = "027"
-	var s string = template.ToString()
-
-	if (s != expected) {
-		t.Errorf("Got: %s --- expected: %s", s, expected)
 	}
 }
 
@@ -167,7 +176,7 @@ func TestUpdate_Update2(t *testing.T) {
 	//println(s1.allTemplates[0].LocalVariables["x"])
 
 	//s1.allTemplates[0].InitialLocation.Edges[0] = s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(s1.allTemplates[0].LocalVariables)
-	s1.allTemplates[0].InitialLocation.Edges[0].Update[0].Update(s1.allTemplates[0].LocalVariables)
+	s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(s1.allTemplates[0].LocalVariables)
 	//println(s.allTemplates[0].LocalVariables["x"])
 	//println(s1.allTemplates[0].LocalVariables["x"])
 
@@ -219,6 +228,30 @@ func TestDeepCopyState(t *testing.T) {
 		t.Errorf("deepcopystate does not work, prolly a reference thing")
 	}
 }
+func TestDeepCopyState2(t *testing.T) {
+	var temp Template = SetupCounterModel()
+	var s State = State{}
+	s.allTemplates = make([]Template, 0,0)
+	s.allTemplates = append(s.allTemplates, temp)
+	s.globalVariables = SetupMap()
+
+	println(s.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(s.allTemplates[0].LocalVariables))
+	println(s.ToString())
+
+	copy_s := DeepCopyState(s)
+	//atomic update
+	copy_s.allTemplates[0].currentLocation.Edges[0].AtomicUpdate(copy_s.allTemplates[0].LocalVariables)
+	//advance location
+	//copy_s.allTemplates[0] = UpdateLocation(copy_s.allTemplates[0], copy_s.allTemplates[0].currentLocation.Edges[0].Dst)
+	copy_s.allTemplates[0].currentLocation = copy_s.allTemplates[0].currentLocation.Edges[0].Dst
+	println(copy_s.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(copy_s.allTemplates[0].LocalVariables))
+	println(copy_s.ToString())
+
+	copy_s1 := DeepCopyState(copy_s)
+	copy_s1.allTemplates[0].currentLocation.Edges[0].AtomicUpdate(copy_s1.allTemplates[0].LocalVariables)
+	println(copy_s1.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(copy_s1.allTemplates[0].LocalVariables))
+	println(copy_s1.ToString())
+}
 
 func TestHash(t *testing.T) {
 	var a string = "aksdksd<jfnjikdfhvjikdvhfjdvh"
@@ -230,3 +263,33 @@ func TestHash(t *testing.T) {
 		t.Errorf("Hash function returns same value of different strings, but should not: '%d' '%d'", c,d)
 	}
 }
+
+func TestValidMap1(t *testing.T) {
+	if ValidMap(SetupMap()){
+
+	} else {
+		t.Errorf("SetupMap returned a map that is invalid")
+	}
+}
+func TestValidMap2(t *testing.T) {
+	if ValidMap(SetupInvalidMap()){
+		t.Errorf("Setup invalid map evaluated to true, which it should not")
+	} else {
+
+	}
+}
+
+func TestEdge_EdgeIsActive(t *testing.T) {
+	map1 := SetupMap()
+	template1 := SetupCounterModel()
+	template1.LocalVariables = map1
+	//println(template1.currentLocation.Edges[0].ToString())
+	if (template1.currentLocation.Edges[0].EdgeIsActive(template1.LocalVariables)){
+
+	} else{
+		t.Errorf("Function evaluated to false, but expected true")
+	}
+}
+
+
+
