@@ -26,6 +26,7 @@ add_executable(simple_model_checker
         src/simple_model_checker.cpp
         src/State.cpp
         src/modelcheckers/BaseModelChecker.cpp
+        src/Group.cpp
         )
 
 target_link_libraries(simple_model_checker Threads::Threads)

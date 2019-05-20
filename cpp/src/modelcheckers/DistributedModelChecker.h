@@ -10,6 +10,7 @@
 #include <kissnet.hpp>
 
 #include "Packet.h"
+#include "Group.h"
 #include "SocketThread.h"
 
 #include "config.h"
@@ -31,6 +32,7 @@ namespace modelcheckers {
         const size_t workerID;
         bool running = true;
 
+        Herd herd; // TODO: this, pass to ctor?
 
         MasterPacket receiveMasterPacket() {
             kn::buffer<2> buffer;
@@ -383,8 +385,9 @@ namespace modelcheckers {
 
         }
 
-        explicit DistributedModelChecker(size_t workerID, model::Model model)
-                : workerID{workerID}, BaseModelChecker{std::move(model)} {}
+
+        explicit DistributedModelChecker(size_t workerID, model::Model model, Herd herd = {})
+                : workerID{workerID}, BaseModelChecker{std::move(model)}, herd{std::move(herd)} {}
     };
 
 }

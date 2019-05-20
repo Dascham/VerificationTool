@@ -7,6 +7,7 @@
 
 #include "util.h"
 #include "State.h"
+#include "Group.h"
 #include "model/Model.h"
 
 namespace modelcheckers {
@@ -37,7 +38,7 @@ namespace modelcheckers {
     public:
             virtual void checkModel() = 0;
 
-            explicit BaseModelChecker(model::Model model) : model{std::move(model)} {}
+            explicit BaseModelChecker(model::Model model, const Herd& herd = {}) : model{std::move(model)} {}
     };
 
 }

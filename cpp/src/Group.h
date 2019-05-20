@@ -6,11 +6,27 @@
 
 #include "State.h"
 
-struct Grouping { // TODO: or Herd
-    std::vector<size_t> groups;
+struct Block {
+    enum class Type {
+        Block, Cover
+    };
 
-    static Grouping fromState(const State &state);
+    Type type;
+    size_t groupID;
+
+    Block(size_t groupID, Type type = Type::Block) : groupID{groupID}, type{type} {} // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
 };
 
+bool operator==(const Block &a, const Block &b);
+std::ostream &operator<<(std::ostream &os, Block const &m);
+
+
+struct Partitioning {
+    std::vector<Block> blocks;
+};
+
+struct Herd {
+    std::vector<Block> groups;
+};
 
 #endif //CPP_GROUP_H
