@@ -2,13 +2,13 @@
 #define CPP_STATE_H
 
 
-#include <vector>
+#include <array>
 #include <ostream>
 
 #include "util.h"
 
 struct State {
-    std::vector<size_t> locations;
+    std::vector<uint8_t> locations;
     std::vector<int8_t> variables;
     // Clocks/Zones/DBM go here
 

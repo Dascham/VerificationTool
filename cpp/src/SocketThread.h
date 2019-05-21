@@ -6,8 +6,15 @@
 #include <queue>
 #include <atomic>
 
+#include <kissnet.hpp>
+#include <iomanip>
+#include "config.h"
+
+namespace kn = kissnet;
+
 class SocketThread {
     std::thread thread;
+    kn::tcp_socket socket;
 
     std::mutex mutex{};
     std::queue<State> queue{};
@@ -17,7 +24,49 @@ class SocketThread {
     void run() {
 
         while (running) {
-            // do socket read stuff
+            if (socket.bytes_available() > sizeof(uint8_t) * MODEL_AUTOMATA + sizeof(int8_t) * MODEL_VARIABLES) {
+
+                kn::buffer<sizeof(uint8_t) * MODEL_AUTOMATA> locationBuffer;
+                kn::buffer<sizeof(int8_t) * MODEL_AUTOMATA> variableBuffer;
+
+                const auto [sizeLoc, statusLoc] = socket.recv(locationBuffer);
+                if (statusLoc != kn::socket_status::valid) {
+                    std::cout << "Socket not valid when receiving location vector, error: " << std::hex << statusLoc << "bytes: " << sizeLoc << std::endl;
+                }
+
+                const auto [sizeVar, statusVar] = socket.recv(locationBuffer);
+                if (statusLoc != kn::socket_status::valid) {
+                    std::cout << "Socket not valid when receiving variable vector, error: " << std::hex << statusVar << "bytes: " << sizeVar << std::endl;
+                }
+
+                std::cout << "Recv State:\n"
+                             "Loc: ";
+
+                for (const auto &loc : locationBuffer) {
+                    std::cout << static_cast<unsigned int>(loc) << " ";
+                }
+
+                std::cout << "\n"
+                             "Var: ";
+
+                for (const auto &var : variableBuffer) {
+                    std::cout << static_cast<int>(var) << " ";
+                }
+
+                std::cout << "\n" << std::endl;
+
+                std::vector<uint8_t> locations(locationBuffer.size());
+                std::vector<int8_t> variables(variableBuffer.size());
+
+                std::copy(locationBuffer.begin(), locationBuffer.end(), std::back_inserter(locations));
+                std::copy(variableBuffer.begin(), variableBuffer.end(), std::back_inserter(variables));
+
+
+                {
+                    std::unique_lock lock{mutex}; // Lock until leaving scope
+                    queue.emplace(locations, variables);
+                }
+            }
         }
     }
 
@@ -41,9 +90,7 @@ public:
         // return success status? or assume at this point everything went well
     }
 
-    SocketThread(/*socket? here*/) : running{true} {
-        running = true;
-
+    explicit SocketThread(kn::tcp_socket socket) : running{true}, socket{std::move(socket)} {
         // TODO: open socket?
 
         thread = std::thread(&SocketThread::run, this);
