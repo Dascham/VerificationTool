@@ -62,6 +62,9 @@ namespace modelcheckers {
 
                     if (edge.sync.type == Sync::Type::Send) {
                         for (int j = 0; j < model.automata.size(); ++j) { // For each automaton
+
+                            if (i == j) continue; // Can't sync with itself(would result in double- or phantom-step?)
+
                             const Automaton &syncedAutomaton = model.automata[j];
 
                             const size_t syncedLoc_j = state.locations[j];
