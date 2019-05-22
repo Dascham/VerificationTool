@@ -12,7 +12,8 @@ struct State {
     std::vector<int8_t> variables;
     // Clocks/Zones/DBM go here
 
-
+    State() = default;
+    State(std::vector<uint8_t> locations, std::vector<int8_t> variables) : locations{std::move(locations)}, variables{std::move(variables)} {}
 };
 
 bool operator==(const State &a, const State &b);

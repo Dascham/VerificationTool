@@ -18,7 +18,7 @@ int main() {
 
     constexpr size_t numVars = 1;
 
-    DistributedModelChecker simpleModelChecker{Model{
+    SimpleModelChecker simpleModelChecker{Model{
         numVars,
         {
             Automaton{{
