@@ -9,21 +9,23 @@
 #include <kissnet.hpp>
 #include <iomanip>
 #include "config.h"
+#include "State.h"
 
 namespace kn = kissnet;
 
 class SocketThread {
+    std::atomic<bool> running;
+
     std::thread thread;
     kn::tcp_socket socket;
 
     std::mutex mutex{};
     std::queue<State> queue{};
 
-    std::atomic<bool> running;
 
     void run() {
-
         while (running) {
+            printf("socketthread\n");
             if (socket.bytes_available() > sizeof(uint8_t) * MODEL_AUTOMATA + sizeof(int8_t) * MODEL_VARIABLES) {
 
                 kn::buffer<sizeof(uint8_t) * MODEL_AUTOMATA> locationBuffer;
@@ -39,28 +41,34 @@ class SocketThread {
                     std::cout << "Socket not valid when receiving variable vector, error: " << std::hex << statusVar << "bytes: " << sizeVar << std::endl;
                 }
 
-                std::cout << "Recv State:\n"
-                             "Loc: ";
+                // Print received state
+                if (true) {
+                    std::cout << "Recv State:\n"
+                                 "Loc: ";
 
-                for (const auto &loc : locationBuffer) {
-                    std::cout << static_cast<unsigned int>(loc) << " ";
+                    for (const auto &loc : locationBuffer) {
+                        std::cout << static_cast<unsigned int>(loc) << " ";
+                    }
+
+                    std::cout << "\n"
+                                 "Var: ";
+
+                    for (const auto &var : variableBuffer) {
+                        std::cout << static_cast<int>(var) << " ";
+                    }
+
+                    std::cout << "\n" << std::endl;
                 }
-
-                std::cout << "\n"
-                             "Var: ";
-
-                for (const auto &var : variableBuffer) {
-                    std::cout << static_cast<int>(var) << " ";
-                }
-
-                std::cout << "\n" << std::endl;
 
                 std::vector<uint8_t> locations(locationBuffer.size());
                 std::vector<int8_t> variables(variableBuffer.size());
 
-                std::copy(locationBuffer.begin(), locationBuffer.end(), std::back_inserter(locations));
-                std::copy(variableBuffer.begin(), variableBuffer.end(), std::back_inserter(variables));
-
+                for (const auto &loc : locationBuffer) {
+                    locations.emplace_back(static_cast<uint8_t>(loc));
+                }
+                for (const auto &var : variableBuffer) {
+                    variables.emplace_back(static_cast<int8_t>(var));
+                }
 
                 {
                     std::unique_lock lock{mutex}; // Lock until leaving scope
@@ -78,23 +86,29 @@ public:
     }
 
     void join() {
-        if (!thread.joinable()) {
-            throw std::logic_error("Tried to terminate thread while it is not joinable");
-        }
-
-        // TODO: Close socket
+        if (!running) throw std::logic_error("SocketThread not running");
+        if (!thread.joinable()) throw std::logic_error("SocketThread not joinable");
 
         running = false;
         thread.join();
 
-        // return success status? or assume at this point everything went well
+        socket.close();
     }
 
-    explicit SocketThread(kn::tcp_socket socket) : running{true}, socket{std::move(socket)} {
-        // TODO: open socket?
+    void assignSocket(kn::tcp_socket newSocket) {
+        if (running) throw std::logic_error("SocketThread already running while trying to assign new socket");
+        if (thread.joinable()) throw std::logic_error("SocketThread was still joinable while trying to assign new socket");
 
+        if (socket.is_valid()) std::clog << "Assigned new socket to SocketThread that already had a valid socket" << std::endl;
+
+        assert( (std::unique_lock{mutex, std::defer_lock}.try_lock()) ); // Mutex should not be locked
+        socket = std::move(newSocket);
+
+        running = true;
         thread = std::thread(&SocketThread::run, this);
     }
+
+    explicit SocketThread() : running{false} {}
 };
 
 #endif //CPP_SOCKETTHREAD_H
