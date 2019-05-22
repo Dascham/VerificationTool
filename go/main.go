@@ -29,34 +29,36 @@ func remove(a []State, i int) []State {
 }
 
 func Explore(initialState State) []State{
+	var hashedStates map[string]string = make(map[string]string)
 	var waitingList []State = make([]State, 0,0) //size zero, always, cause append fixes size by itself
 	waitingList = append(waitingList, initialState)
-
 	var passedList []State = make([]State, 0,0)
 
 	for len(waitingList) > 0 { //exploration loop
-		println("First print")
 		var currentState = waitingList[0]
-		//remove the element
 		waitingList = remove(waitingList, 0)
 		for i := 0;i < len(currentState.allTemplates);i++{
-			println("second for loop?")
-			println(len(currentState.allTemplates[i].currentLocation.Edges))
 			for j := 0 ; j < len(currentState.allTemplates[i].currentLocation.Edges); j++{
-				println("Third for loop?")
-				println(currentState.allTemplates[i].currentLocation.Edges[j].EdgeIsActive(currentState.allTemplates[i].LocalVariables))
-				if (currentState.allTemplates[i].currentLocation.Edges[j].EdgeIsActive(currentState.allTemplates[i].LocalVariables)){
+				if (currentState.allTemplates[i].currentLocation.Edges[j].EdgeIsActive(currentState.allTemplates[i].LocalVariables, currentState)){
 					//have to instantiate new state here
 					newState := DeepCopyState(currentState)
-					println("We here now")
+
 					//do update on new state
-					newState.allTemplates[i].currentLocation.Edges[j].AtomicUpdate(newState.allTemplates[i].LocalVariables)
+					newState.allTemplates[i].currentLocation.Edges[j].AtomicUpdate(newState.allTemplates[i].LocalVariables, newState.globalVariables)
+
+					//check if state has been encountered before
+					temp := newState.ToString()
+					if _, ok := hashedStates[temp]; ok{
+						break;
+					} else{
+						hashedStates[temp] = temp
+					}
 					//then advance location, by looking to dst of edge that we took
 					newState.allTemplates[i].currentLocation = newState.allTemplates[i].currentLocation.Edges[j].Dst
 					//add newstate to waitinglist, for distributed, call distribute function, which hashes and does stuff
 					//add only if map is valid, this should be made to better fix
-					if (ValidMap(newState.allTemplates[i].LocalVariables)) {
-						println("we here?")
+					if (ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(currentState.globalVariables)) {
+						//println("we here?")
 						waitingList = append(waitingList, newState)
 					}
 				}
@@ -69,10 +71,12 @@ func Explore(initialState State) []State{
 }
 
 //helper function, for finding an synchronization partner for an edge
-func FindSync(e Edge) (bool, Edge){
+/*
+func FindSync(e Edge, currentState State,  int) (bool, Edge){
 
 	return false, Edge{}
 }
+ */
 
 func Hash(s string) uint32 {
 	h := fnv.New32a()
@@ -142,3 +146,4 @@ func UpdateLocation(t Template, l *Location)Template{
 
 	return t
 }
+

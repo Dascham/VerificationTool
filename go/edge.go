@@ -42,19 +42,19 @@ func (e Edge) AssignSrcDst(src *Location, dst *Location) Edge{
 	return e
 }
 
-func (e Edge) EdgeIsActive(localVariables map[string]int) bool{
+func (e Edge) EdgeIsActive(localVariables map[string]int, s State) bool{
 	var tempMap = CopyMap(localVariables)
 	var result bool = true
 	for i := 0; i < len(e.Guard); i++ {
-		if (!e.Guard[i].Evaluate(localVariables)) {
+		if (!e.Guard[i].Evaluate(localVariables) || !e.Guard[i].Evaluate(s.globalVariables)) {
 			return false
 		}
 	}
 	//eval channels, not done yet
 
 	//then eval dst invariant, where we need to update first, and then check if invariant valid
-	e.AtomicUpdate(tempMap)
-	if (!e.Dst.Invariant.IsValid(tempMap)) { //add one more for chan
+	e.AtomicUpdate(tempMap, s.globalVariables)
+	if (!e.Dst.Invariant.IsValid(tempMap) || !e.Dst.Invariant.IsValid(s.globalVariables)) { //add one more for chan
 			return false
 		}
 	return result
@@ -78,9 +78,10 @@ func ValidValue(a int) bool{
 	}
 }
 
-func (e Edge) AtomicUpdate(localVariables map[string]int) Edge{
+func (e Edge) AtomicUpdate(localVariables, globalVariables map[string]int) Edge{
 	for i:=0;i<len(e.Update);i++{
 		e.Update[i].Update(localVariables)
+		e.Update[i].Update(globalVariables)
 	}
 	return e
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -57,7 +58,7 @@ func TestTemplate_ToString(t *testing.T) {
 	}
 }
 
-/*
+
 func SetupFullModel() Template{
 	//have global mutex, in order to change global state,
 	// although not necessary for passed and waiting list implementation
@@ -91,34 +92,34 @@ func SetupFullModel() Template{
 	var edge0 Edge = Edge{}
 	edge0 = edge0.InitializeEdge()
 	edge0 = edge0.AcceptUpdates(update0)
-	edge0 = edge0.AssignSrcDst(location0, location0)
+	edge0 = edge0.AssignSrcDst(&location0, &location0)
 	var edge1 = Edge{}
 	edge1 = edge1.InitializeEdge()
 	edge1 = edge1.AcceptGuards(guard0)
 	edge1 = edge1.AcceptUpdates(update1)
-	edge1 = edge1.AssignSrcDst(location0, location1)
+	edge1 = edge1.AssignSrcDst(&location0, &location1)
 	var edge2 = Edge{}
 	edge2 = edge2.InitializeEdge()
 	edge2 = edge2.AcceptUpdates(update2)
-	edge2 = edge2.AssignSrcDst(location1, location1)
+	edge2 = edge2.AssignSrcDst(&location1, &location1)
 	var edge3 = Edge{}
 	edge3 = edge3.InitializeEdge()
 	edge3 = edge3.AcceptGuards(guard1)
 	edge3 = edge3.AcceptUpdates(update3)
-	edge3 = edge3.AssignSrcDst(location1, location2)
+	edge3 = edge3.AssignSrcDst(&location1, &location2)
 	var edge4 = Edge{}
 	edge4 = edge4.InitializeEdge()
 	edge4 = edge4.AcceptUpdates(update4)
-	edge4 = edge4.AssignSrcDst(location2, location2)
+	edge4 = edge4.AssignSrcDst(&location2, &location2)
 	var edge5 = Edge{}
 	edge5 = edge5.InitializeEdge()
 	edge5 = edge5.AcceptGuards(guard2)
 	edge5 = edge5.AcceptUpdates(update5)
-	edge5 = edge5.AssignSrcDst(location2, location3)
+	edge5 = edge5.AssignSrcDst(&location2, &location3)
 	var edge6 = Edge{}
 	edge6 = edge6.InitializeEdge()
 	edge6 = edge6.AcceptUpdates(update6)
-	edge6 = edge6.AssignSrcDst(location3, location3)
+	edge6 = edge6.AssignSrcDst(&location3, &location3)
 	var edge7 = Edge{}
 	edge7 = edge7.InitializeEdge()
 	edge7 = edge7.AcceptGuards(guard3)
@@ -134,7 +135,7 @@ func SetupFullModel() Template{
 
 	return template
 }
-*/
+
 
 func TestGuard_Evaluate(t *testing.T) {
 	var localVariables map[string]int = SetupMap()
@@ -176,7 +177,7 @@ func TestUpdate_Update2(t *testing.T) {
 	//println(s1.allTemplates[0].LocalVariables["x"])
 
 	//s1.allTemplates[0].InitialLocation.Edges[0] = s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(s1.allTemplates[0].LocalVariables)
-	s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(s1.allTemplates[0].LocalVariables)
+	s1.allTemplates[0].InitialLocation.Edges[0].AtomicUpdate(s1.allTemplates[0].LocalVariables, s1.globalVariables)
 	//println(s.allTemplates[0].LocalVariables["x"])
 	//println(s1.allTemplates[0].LocalVariables["x"])
 
@@ -235,21 +236,21 @@ func TestDeepCopyState2(t *testing.T) {
 	s.allTemplates = append(s.allTemplates, temp)
 	s.globalVariables = SetupMap()
 
-	println(s.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(s.allTemplates[0].LocalVariables))
+	println(s.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(s.allTemplates[0].LocalVariables, s))
 	println(s.ToString())
 
 	copy_s := DeepCopyState(s)
 	//atomic update
-	copy_s.allTemplates[0].currentLocation.Edges[0].AtomicUpdate(copy_s.allTemplates[0].LocalVariables)
+	copy_s.allTemplates[0].currentLocation.Edges[0].AtomicUpdate(copy_s.allTemplates[0].LocalVariables, copy_s.globalVariables)
 	//advance location
 	//copy_s.allTemplates[0] = UpdateLocation(copy_s.allTemplates[0], copy_s.allTemplates[0].currentLocation.Edges[0].Dst)
 	copy_s.allTemplates[0].currentLocation = copy_s.allTemplates[0].currentLocation.Edges[0].Dst
-	println(copy_s.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(copy_s.allTemplates[0].LocalVariables))
+	println(copy_s.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(copy_s.allTemplates[0].LocalVariables, copy_s))
 	println(copy_s.ToString())
 
 	copy_s1 := DeepCopyState(copy_s)
-	copy_s1.allTemplates[0].currentLocation.Edges[0].AtomicUpdate(copy_s1.allTemplates[0].LocalVariables)
-	println(copy_s1.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(copy_s1.allTemplates[0].LocalVariables))
+	copy_s1.allTemplates[0].currentLocation.Edges[0].AtomicUpdate(copy_s1.allTemplates[0].LocalVariables, copy_s1.globalVariables)
+	println(copy_s1.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(copy_s1.allTemplates[0].LocalVariables, copy_s1))
 	println(copy_s1.ToString())
 }
 
@@ -284,11 +285,58 @@ func TestEdge_EdgeIsActive(t *testing.T) {
 	template1 := SetupCounterModel()
 	template1.LocalVariables = map1
 	//println(template1.currentLocation.Edges[0].ToString())
-	if (template1.currentLocation.Edges[0].EdgeIsActive(template1.LocalVariables)){
+	if (template1.currentLocation.Edges[0].EdgeIsActive(template1.LocalVariables, State{})){
 
 	} else{
 		t.Errorf("Function evaluated to false, but expected true")
 	}
+}
+
+func TestHashedStates(t *testing.T){
+	s := State{}
+	s.globalVariables = SetupMap()
+	s.allTemplates = make([]Template, 0,0)
+	s.allTemplates = append(s.allTemplates, SetupCounterModel())
+	s.allTemplates = append(s.allTemplates, SetupCounterModel())
+	hashedStates := make(map[string]string)
+
+	//put in state
+	hashedStates[s.ToString()] = s.ToString()
+	//this test mail fail because of concurrency
+	if _, ok := hashedStates[s.ToString()]; ok{
+		//println("We've seen before")
+	}else {
+		t.Errorf("We expect to see the state in the hashtable, since we just put it there. This " +
+			"test may have failed, because concurrency.")
+	}
+}
+func TestUpdate_Update3(t *testing.T) {
+	template1 := SetupCounterModel()
+	template1.LocalVariables = SetupMap()
+
+	println(template1.ToString())
+	template1.currentLocation.Edges[0].AtomicUpdate(template1.LocalVariables, map[string]int{})
+	println(template1.ToString())
+}
+
+func TestStringBuilderConcurrency(t *testing.T){
+	//three strings
+	slice := make([]string,0,0)
+
+	slice=append(slice, "string 1 ")
+	slice=append( slice,"string 2 ")
+	slice=append(slice, "string 3 ")
+
+	var sb strings.Builder
+	sb.WriteString(slice[0])
+	sb.WriteString(slice[1])
+	sb.WriteString(slice[2])
+
+	for i:=0;i<400;i++{
+		sb.WriteString(slice[i%3])
+	}
+
+	//println(sb.String())
 }
 
 

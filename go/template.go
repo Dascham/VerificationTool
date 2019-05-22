@@ -18,7 +18,7 @@ func (t Template) ToString()string{
 	var sb strings.Builder
 
 	//location id, which is unique -> good
-	sb.WriteString((strconv.Itoa(t.InitialLocation.LocationId)))
+	sb.WriteString((strconv.Itoa(t.currentLocation.LocationId)))
 
 	//then all variables, which is basically the localvariables map
 	for _, value := range t.LocalVariables {

@@ -20,23 +20,25 @@ func (g Guard) Evaluate(localVariables map[string]int) bool{
 		return false
 	}
 
-	switch g.ComparisonOperator {
-	case "<":
-		if(localVariables[g.VariableToEvaluate] < g.GuardValue){
+	if _, ok := localVariables[g.VariableToEvaluate]; ok || g.VariableToEvaluate==""  {
+		switch g.ComparisonOperator {
+		case "<":
+			if (localVariables[g.VariableToEvaluate] < g.GuardValue) {
+				result = true
+			}
+		case ">":
+			if (localVariables[g.VariableToEvaluate] > g.GuardValue) {
+				result = true
+			}
+		case "==":
+			if (localVariables[g.VariableToEvaluate] == g.GuardValue) {
+				result = true
+			}
+		case "":
 			result = true
+		default:
+			result = false
 		}
-	case ">":
-		if(localVariables[g.VariableToEvaluate] > g.GuardValue){
-			result = true
-		}
-	case "==":
-		if(localVariables[g.VariableToEvaluate] == g.GuardValue){
-			result = true
-		}
-	case "":
-		result = true
-	default:
-		result = false
 	}
 	return result
 }
