@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -18,12 +19,19 @@ func (t Template) ToString()string{
 	var sb strings.Builder
 
 	//location id, which is unique -> good
-	sb.WriteString((strconv.Itoa(t.currentLocation.LocationId)))
+	sb.WriteString("Location: "+(strconv.Itoa(t.currentLocation.LocationId)+" "))
 
 	//then all variables, which is basically the localvariables map
-	for _, value := range t.LocalVariables {
-		sb.WriteString(strconv.Itoa(value))
+	var keys []string
+	for key, _ := range t.LocalVariables{
+		keys = append(keys, key)
 	}
+	sort.Strings(keys)
+
+	for i:=0;i<len(keys);i++{
+		sb.WriteString(keys[i]+":"+strconv.Itoa(t.LocalVariables[keys[i]])+" ")
+	}
+
 	return sb.String()
 }
 

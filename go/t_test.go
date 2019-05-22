@@ -1,7 +1,7 @@
 package main
 
 import (
-	"strings"
+	"fmt"
 	"testing"
 )
 
@@ -28,7 +28,7 @@ func SetupTemplate() Template{
 }
 
 func SetupCounterModel() Template{
-	var localVariables map[string]int = map[string]int{"x":0}
+	var localVariables map[string]int = map[string]int{"x":0, "y":5,"z":10}
 	var template Template = Template{}
 	template.LocalVariables = localVariables
 	var location0 Location = NewLocation("L0", Invariant{})
@@ -47,16 +47,23 @@ func SetupCounterModel() Template{
 	return template
 }
 
+
+
 //this test should be the first test to call the function SetupTemplate(), otherwise it will fail
+
 func TestTemplate_ToString(t *testing.T) {
 	var template Template = SetupTemplate()
 	var expected string = "027"
 	var s string = template.ToString()
 
+
 	if (s != expected) {
 		t.Errorf("Got: %s --- expected: %s", s, expected)
 	}
+
 }
+
+
 
 
 func SetupFullModel() Template{
@@ -163,6 +170,8 @@ func TestUpdate_Update(t *testing.T) {
 	}
 }
 
+
+
 func TestUpdate_Update2(t *testing.T) {
 	var s State = State{}
 	s.allTemplates = make([]Template, 0, 0)
@@ -187,6 +196,12 @@ func TestUpdate_Update2(t *testing.T) {
 	}
 }
 
+func TestInvariant_IsValid(t *testing.T) {
+	//two maps
+	var map1 map[string]int = map[string]int{"f":10}
+	var map2 map[]
+	var i Invariant = Invariant{"f", "<", }
+}
 
 func TestLocation_AcceptOutGoingEdges(t *testing.T) {
 	var l0 Location = NewLocation("L0", Invariant{})
@@ -235,23 +250,25 @@ func TestDeepCopyState2(t *testing.T) {
 	s.allTemplates = make([]Template, 0,0)
 	s.allTemplates = append(s.allTemplates, temp)
 	s.globalVariables = SetupMap()
-
-	println(s.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(s.allTemplates[0].LocalVariables, s))
-	println(s.ToString())
-
+	//copy state
 	copy_s := DeepCopyState(s)
-	//atomic update
+	//update
 	copy_s.allTemplates[0].currentLocation.Edges[0].AtomicUpdate(copy_s.allTemplates[0].LocalVariables, copy_s.globalVariables)
 	//advance location
-	//copy_s.allTemplates[0] = UpdateLocation(copy_s.allTemplates[0], copy_s.allTemplates[0].currentLocation.Edges[0].Dst)
 	copy_s.allTemplates[0].currentLocation = copy_s.allTemplates[0].currentLocation.Edges[0].Dst
-	println(copy_s.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(copy_s.allTemplates[0].LocalVariables, copy_s))
-	println(copy_s.ToString())
 
+	//copy state
 	copy_s1 := DeepCopyState(copy_s)
+	//update
 	copy_s1.allTemplates[0].currentLocation.Edges[0].AtomicUpdate(copy_s1.allTemplates[0].LocalVariables, copy_s1.globalVariables)
-	println(copy_s1.allTemplates[0].currentLocation.Edges[0].EdgeIsActive(copy_s1.allTemplates[0].LocalVariables, copy_s1))
-	println(copy_s1.ToString())
+	//advance location
+	copy_s1.allTemplates[0].currentLocation = copy_s1.allTemplates[0].currentLocation.Edges[0].Dst
+
+	//shoud be some other condition, but fine for now
+	if (s.ToString() == copy_s.ToString() || s.ToString() == copy_s1.ToString() || copy_s.ToString() == copy_s1.ToString()){
+		t.Errorf("Expected increaments between the states, but the variables are the same, so update probably failed")
+	}
+
 }
 
 func TestHash(t *testing.T) {
@@ -302,7 +319,8 @@ func TestHashedStates(t *testing.T){
 
 	//put in state
 	hashedStates[s.ToString()] = s.ToString()
-	//this test mail fail because of concurrency
+	//this test mail fail because of concurrency, because values might be switched
+
 	if _, ok := hashedStates[s.ToString()]; ok{
 		//println("We've seen before")
 	}else {
@@ -314,30 +332,41 @@ func TestUpdate_Update3(t *testing.T) {
 	template1 := SetupCounterModel()
 	template1.LocalVariables = SetupMap()
 
-	println(template1.ToString())
+	temp := template1.ToString()
+	//empty map for global variables, which is right
 	template1.currentLocation.Edges[0].AtomicUpdate(template1.LocalVariables, map[string]int{})
-	println(template1.ToString())
-}
 
-func TestStringBuilderConcurrency(t *testing.T){
-	//three strings
-	slice := make([]string,0,0)
-
-	slice=append(slice, "string 1 ")
-	slice=append( slice,"string 2 ")
-	slice=append(slice, "string 3 ")
-
-	var sb strings.Builder
-	sb.WriteString(slice[0])
-	sb.WriteString(slice[1])
-	sb.WriteString(slice[2])
-
-	for i:=0;i<400;i++{
-		sb.WriteString(slice[i%3])
+	if (temp != template1.ToString()){
+		t.Errorf("Expected the ToString methods to return the same results, even though we update, because we update 'x', which " +
+			"isn't in the map, and therefore no variables should be changed")
 	}
+	//if fail, prolly because 'x' has been added to localvariables
 
-	//println(sb.String())
 }
 
 
+func TestExplore(t *testing.T) {
+	var initialState State = SetupSimpleSyncModel()
+	var list []State = Explore(initialState)
 
+	fmt.Printf("len of list: %d \n", len(list))
+
+	for i := 0; i < len(list);i++{
+		println(list[i].ToString())
+	}
+}
+
+/*
+func TestExplore2(t *testing.T) {
+	var initialState State = State{}
+	initialState.allTemplates = make([]Template, 0,0)
+	initialState.allTemplates = append(initialState.allTemplates, MainSetupCounterModel())
+
+	var list []State = Explore(initialState)
+
+
+	for i := 0; i < len(list);i++{
+		println(list[i].ToString())
+	}
+}
+ */

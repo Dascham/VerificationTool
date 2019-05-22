@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 //an edge consists of src node, dst node, a possible guard, a possible synchronization,
 // and a possible update on local or global variables.
@@ -44,19 +47,31 @@ func (e Edge) AssignSrcDst(src *Location, dst *Location) Edge{
 
 func (e Edge) EdgeIsActive(localVariables map[string]int, s State) bool{
 	var tempMap = CopyMap(localVariables)
+	var tempGlobal = CopyMap(s.globalVariables)
 	var result bool = true
+
 	for i := 0; i < len(e.Guard); i++ {
-		if (!e.Guard[i].Evaluate(localVariables) || !e.Guard[i].Evaluate(s.globalVariables)) {
+		if (e.Guard[i].Evaluate(localVariables) || e.Guard[i].Evaluate(s.globalVariables)) {
+
+		}else{
 			return false
 		}
 	}
+
 	//eval channels, not done yet
 
 	//then eval dst invariant, where we need to update first, and then check if invariant valid
-	e.AtomicUpdate(tempMap, s.globalVariables)
-	if (!e.Dst.Invariant.IsValid(tempMap) || !e.Dst.Invariant.IsValid(s.globalVariables)) { //add one more for chan
+	e.AtomicUpdate(tempMap, tempGlobal)
+	println(e.Dst.Invariant.IsValid(tempMap))
+	println(e.Dst.Invariant.IsValid(tempGlobal))
+
+	if (e.Dst.Invariant.IsValid(tempMap) || e.Dst.Invariant.IsValid(s.globalVariables)) { //add one more for chan
+
+		}else {
 			return false
-		}
+	}
+	fmt.Printf("We here? %s \n)", e.ToString())
+
 	return result
 }
 

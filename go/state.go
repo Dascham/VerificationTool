@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -20,9 +21,13 @@ func (s State) ToString() string{
 		sb.WriteString(s.allTemplates[i].ToString())
 	}
 
-	
-	for _, value := range s.globalVariables{
-		sb.WriteString(strconv.Itoa(value))
+	var keys []string
+	for key, _ := range s.globalVariables{
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for i:=0;i<len(keys);i++{
+		sb.WriteString(keys[i]+":"+strconv.Itoa(s.globalVariables[keys[i]])+" ")
 	}
 	return sb.String()
 }
