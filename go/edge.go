@@ -61,8 +61,7 @@ func (e Edge) EdgeIsActive(localVariables map[string]int, s State) bool{
 
 	//then eval dst invariant, where we need to update first, and then check if invariant valid
 	e.AtomicUpdate(tempMap, tempGlobal)
-
-	if (e.Dst.Invariant.IsValid(tempMap) || e.Dst.Invariant.IsValid(s.globalVariables)) { //add one more for chan
+	if (e.Dst.Invariant.IsValid(tempMap) || e.Dst.Invariant.IsValid(tempGlobal)) { //add one more for chan
 
 		}else {
 			return false

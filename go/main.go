@@ -19,7 +19,6 @@ func main(){
 	}
 }
 
-
 func remove(a []State, i int) []State {
 	a[i] = a[len(a)-1] // Copy last element to index i.
 	a[len(a)-1] = State{} // Erase last element (write zero value).
@@ -30,6 +29,7 @@ func remove(a []State, i int) []State {
 
 func Explore(initialState State) []State{
 	var hashedStates map[string]string = make(map[string]string)
+	hashedStates[initialState.ToString()] = initialState.ToString()
 	var waitingList []State = make([]State, 0,0) //size zero, always, cause append fixes size by itself
 	waitingList = append(waitingList, initialState)
 	var passedList []State = make([]State, 0,0)
@@ -68,6 +68,7 @@ func Explore(initialState State) []State{
 							}
 						}
 					} else{ //we do basic transition
+
 						//have to instantiate new state here
 						newState := DeepCopyState(currentState)
 						//do update on new state
@@ -86,8 +87,8 @@ func Explore(initialState State) []State{
 						//add newstate to waitinglist, for distributed, call distribute function, which hashes and does stuff
 						//add only if map is valid, this should be made to better fix
 						if (ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(currentState.globalVariables)) {
-						//println("we here?")
-						waitingList = append(waitingList, newState)
+							waitingList = append(waitingList, newState)
+							println("add to waitinglist")
 						}
 					}
 				}
@@ -187,7 +188,6 @@ func DeepCopyState(s State) State{
 		newState.allTemplates = append(newState.allTemplates, s.allTemplates[i])
 	}
 
-
 	newState.globalVariables = CopyMap(s.globalVariables)
 
 	for i := 0; i<len(s.allTemplates);i++ {
@@ -200,16 +200,12 @@ func DeepCopyState(s State) State{
 func SetupSimpleSyncModel() State{
 	var initialState State = State{}
 	initialState.globalVariables = map[string]int{"y":8,"z":5}
-
 	//guards
 	var guard0 Guard = Guard{"x", "==", 0}
 	var guard1 Guard = Guard{"z", "<", 10}
-
 	var update0 Update = Update{"y", "++", 0}
 	var update1 Update = Update{"y", "*", 2}
-
 	var invariant0 Invariant = Invariant{"z", "<", 10}
-
 	var location0 Location = NewLocation("L0", Invariant{})
 	var Location1 Location = NewLocation("L1", Invariant{})
 	var location2 Location = NewLocation("L2", Invariant{})
@@ -249,4 +245,10 @@ func SetupSimpleSyncModel() State{
 	initialState.allTemplates = append(initialState.allTemplates, template0, template1)
 
 	return initialState
+}
+
+func PrintStates(list []State) {
+	for _, s := range list{
+		fmt.Printf(s.ToString()+"\n")
+	}
 }

@@ -31,3 +31,10 @@ func (s State) ToString() string{
 	}
 	return sb.String()
 }
+
+func (s State) ConfigureState(si StateInformation) State{
+	
+
+
+	return s
+}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -53,7 +54,7 @@ func SetupCounterModel() Template{
 
 func TestTemplate_ToString(t *testing.T) {
 	var template Template = SetupTemplate()
-	var expected string = "027"
+	var expected string = "Location: 0 a:2 b:7 "
 	var s string = template.ToString()
 
 
@@ -351,29 +352,70 @@ func TestUpdate_Update3(t *testing.T) {
 
 }
 
-
 func TestExplore(t *testing.T) {
 	var initialState State = SetupSimpleSyncModel()
 	var list []State = Explore(initialState)
 
-	fmt.Printf("len of list: %d \n", len(list))
+	if len(list) != 2{
+		t.Errorf("Expected to find, in total, 2 states for setupsimplesyncmodel")
 
-	for i := 0; i < len(list);i++{
-		println(list[i].ToString())
+	}
+	if(list[1].globalVariables["y"] != 18){
+		t.Errorf("Variable should be '18', but is %d", list[1].globalVariables["y"])
 	}
 }
 
-/*
 func TestExplore2(t *testing.T) {
-	var initialState State = State{}
-	initialState.allTemplates = make([]Template, 0,0)
-	initialState.allTemplates = append(initialState.allTemplates, MainSetupCounterModel())
+	var update0 Update = Update{"x", "=", 1}
+	var update1 Update = Update{"x", "=", 0}
+	var location0 = NewLocation("L0", Invariant{})
+	var location1 = NewLocation("L1", Invariant{})
 
-	var list []State = Explore(initialState)
+	var edge0 Edge = Edge{}
+	edge0 = edge0.InitializeEdge()
+	edge0 = edge0.AcceptUpdates(update0)
+	edge0 = edge0.AssignSrcDst(&location0, &location1)
 
+	var edge1 Edge = Edge{}
+	edge1 = edge1.InitializeEdge()
+	edge1 = edge1.AcceptUpdates(update1)
+	edge1 = edge1.AssignSrcDst(&location1, &location0)
 
-	for i := 0; i < len(list);i++{
-		println(list[i].ToString())
+	location0 = location0.AcceptOutGoingEdges(edge0)
+	location1 = location1.AcceptOutGoingEdges(edge1)
+
+	var template0 Template = Template{}
+	template0.currentLocation = &location0
+	template0.InitialLocation = &location0
+	template0.LocalVariables = map[string]int{"x":0}
+
+	var s State = State{}
+	s.allTemplates = make([]Template, 0,0)
+	s.allTemplates = append(s.allTemplates, template0)
+	s.globalVariables = make(map[string]int)
+
+	var list []State = make([]State, 0,0)
+	list = Explore(s)
+	if len(list) != 2 {
+		t.Errorf("len of list should be 2, but got %d", len(list))
 	}
+	PrintStates(list)
+
 }
- */
+func TestClient(t *testing.T) {
+	var s State = State{}
+	s.globalVariables = SetupMap()
+	s.allTemplates = append(s.allTemplates, SetupCounterModel())
+	fmt.Println(s.ToString())
+	jsonbytes, err := json.Marshal(s)
+
+	if err != nil{
+		fmt.Println("something wrong")
+	} else{
+		fmt.Println(jsonbytes)
+	}
+	var s1 State = State{}
+	json.Unmarshal(jsonbytes, &s1)
+	println(s1.ToString())
+	println(s1.globalVariables["b"])
+}
