@@ -24,19 +24,18 @@ func (i Invariant) IsValid(localVariables map[string]int) bool {
 		return false
 	}
 
-
 	if _, ok := localVariables[i.VariableToEvaluate]; ok || i.VariableToEvaluate=="" {
 		switch i.ComparisonOperator {
 		case "<":
-			if (i.InvariantValue < localVariables[i.VariableToEvaluate]) {
+			if (localVariables[i.VariableToEvaluate] < i.InvariantValue) {
 				result = true
 			}
 		case ">":
-			if (i.InvariantValue > localVariables[i.VariableToEvaluate]) {
+			if (localVariables[i.VariableToEvaluate] > i.InvariantValue) {
 				result = true
 			}
 		case "==":
-			if (i.InvariantValue == localVariables[i.VariableToEvaluate]) {
+			if (localVariables[i.VariableToEvaluate] == i.InvariantValue) {
 				result = true
 			}
 		case "":

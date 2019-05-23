@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -62,15 +61,12 @@ func (e Edge) EdgeIsActive(localVariables map[string]int, s State) bool{
 
 	//then eval dst invariant, where we need to update first, and then check if invariant valid
 	e.AtomicUpdate(tempMap, tempGlobal)
-	println(e.Dst.Invariant.IsValid(tempMap))
-	println(e.Dst.Invariant.IsValid(tempGlobal))
 
 	if (e.Dst.Invariant.IsValid(tempMap) || e.Dst.Invariant.IsValid(s.globalVariables)) { //add one more for chan
 
 		}else {
 			return false
 	}
-	fmt.Printf("We here? %s \n)", e.ToString())
 
 	return result
 }

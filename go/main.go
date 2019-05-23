@@ -38,14 +38,10 @@ func Explore(initialState State) []State{
 		var currentState = waitingList[0]
 		waitingList = remove(waitingList, 0)
 		for i := 0;i < len(currentState.allTemplates);i++{
-
 			for j := 0 ; j < len(currentState.allTemplates[i].currentLocation.Edges); j++{
-
 				if (currentState.allTemplates[i].currentLocation.Edges[j].EdgeIsActive(currentState.allTemplates[i].LocalVariables, currentState)){
 					//check if edge has hand-shake sync
-
 					if (currentState.allTemplates[i].currentLocation.Edges[j].Ch != ""){
-
 						foundedges, ok, templateNumbers := FindSyncEdges(currentState.allTemplates[i].currentLocation.Edges[j],currentState,i)
 						if ok { //means we found some edges
 							for k, edge := range foundedges{
@@ -87,7 +83,6 @@ func Explore(initialState State) []State{
 						} else{
 							hashedStates[temp] = temp
 						}
-
 						//add newstate to waitinglist, for distributed, call distribute function, which hashes and does stuff
 						//add only if map is valid, this should be made to better fix
 						if (ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(currentState.globalVariables)) {
@@ -112,7 +107,7 @@ func FindSyncEdges(e Edge, currentState State, activeTemplate int) ([]Edge, bool
 	//essentially, find all edges, which match
 	for i, template := range currentState.allTemplates{
 		if (i == activeTemplate){ //skip the template, that we are "in"
-			break;
+			continue;
 		}else {
 			for _, edge := range template.currentLocation.Edges {
 				if (e.IsSend){
@@ -120,12 +115,13 @@ func FindSyncEdges(e Edge, currentState State, activeTemplate int) ([]Edge, bool
 						foundEdges = append(foundEdges, edge)
 						templateNumbers = append(templateNumbers, i)
 					}
-				} else {
+				} /*else {
 					if (edge.IsSend && edge.Ch == e.Ch && edge.EdgeIsActive(template.LocalVariables, currentState)){
 						foundEdges = append(foundEdges, edge)
 						templateNumbers = append(templateNumbers, i)
 					}
 				}
+				*/
 			}
 		}
 	}

@@ -198,9 +198,16 @@ func TestUpdate_Update2(t *testing.T) {
 
 func TestInvariant_IsValid(t *testing.T) {
 	//two maps
-	var map1 map[string]int = map[string]int{"f":10}
-	var map2 map[]
-	var i Invariant = Invariant{"f", "<", }
+	var map1 map[string]int = map[string]int{"f":5}
+	//var map2 map[]
+	var i Invariant = Invariant{"f", "<", 10}
+
+	if (i.IsValid(map1)){
+
+	}else{
+		t.Errorf("Expected to be valid, but was not")
+	}
+
 }
 
 func TestLocation_AcceptOutGoingEdges(t *testing.T) {
