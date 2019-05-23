@@ -33,8 +33,37 @@ func (s State) ToString() string{
 }
 
 func (s State) ConfigureState(si StateInformation) State{
-	
-
+	s.globalVariables = si.globalVariables
+	for i, tempMap := range si.listLocalVariables{
+		s.allTemplates[i].LocalVariables = tempMap
+		s.allTemplates[i].currentLocation = configLocation(s.allTemplates[i], si.currentLocationIds[i])
+	}
 
 	return s
+}
+func configLocation(t Template, locationid int) *Location{
+	var correctLocation *Location
+	var locations []*Location = make([]*Location, 0,0)
+	locations = append(locations, t.InitialLocation)
+	for len(locations) > 0 {
+		if (locations[0].LocationId == locationid){
+			correctLocation = locations[0]
+			break;
+		}else{
+			//add all locations to list, from outgoing edges
+			for _,edge := range locations[0].Edges{
+				locations = append(locations, edge.Dst)
+			}
+			removeLocation(locations, 0)
+		}
+	}
+	return correctLocation
+}
+
+func removeLocation(a []*Location, i int) []*Location {
+	a[i] = a[len(a)-1] // Copy last element to index i.
+	a[len(a)-1] = &Location{} // Erase last element (write zero value).
+	a = a[:len(a)-1]   //truncate slice
+
+	return a
 }

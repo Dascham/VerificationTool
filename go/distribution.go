@@ -91,16 +91,16 @@ func handleConnection(conn net.Conn, channel chan State) {
 
 type StateInformation struct{
 	globalVariables map[string]int
-	localVariables []map[string]int
+	listLocalVariables []map[string]int
 	currentLocationIds []int
 }
 
 func (si StateInformation) GetEssentialInformation(s State) StateInformation{
 	si.globalVariables = s.globalVariables
 
-	for i, template := range s.allTemplates{
-		si.localVariables[i] = template.LocalVariables
-		si.currentLocationIds[i] = template.currentLocation.LocationId
+	for _, template := range s.allTemplates{
+		si.listLocalVariables = append(si.listLocalVariables, template.LocalVariables)
+		si.currentLocationIds = append(si.currentLocationIds, template.currentLocation.LocationId)
 	}
 	return si
 }

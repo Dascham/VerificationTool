@@ -365,7 +365,7 @@ func TestExplore(t *testing.T) {
 	}
 }
 
-func TestExplore2(t *testing.T) {
+func SetupPotentiallyInfiniteModel() State{
 	var update0 Update = Update{"x", "=", 1}
 	var update1 Update = Update{"x", "=", 0}
 	var location0 = NewLocation("L0", Invariant{})
@@ -394,14 +394,44 @@ func TestExplore2(t *testing.T) {
 	s.allTemplates = append(s.allTemplates, template0)
 	s.globalVariables = make(map[string]int)
 
+	return s
+}
+
+func TestExplore2(t *testing.T) {
+	s := SetupPotentiallyInfiniteModel()
 	var list []State = make([]State, 0,0)
+
 	list = Explore(s)
 	if len(list) != 2 {
 		t.Errorf("len of list should be 2, but got %d", len(list))
 	}
 	PrintStates(list)
+}
+
+func TestStateInformation_GetEssentialInformation(t *testing.T) {
+	var s State = State{}
+	s.globalVariables = SetupMap()
+	s.allTemplates = make([]Template, 0,0)
+	s.allTemplates = append(s.allTemplates, SetupCounterModel())
+
+	var si StateInformation = StateInformation{}
+	si.globalVariables = make(map[string]int)
+	si = si.GetEssentialInformation(s)
+
+	if (s.globalVariables["a"] != si.globalVariables["a"] || s.globalVariables["b"] != si.globalVariables["b"]){
+		t.Errorf("function don't work")
+	}
+}
+
+func TestState_ConfigureState(t *testing.T) {
+	var s State = State{}
+	var si StateInformation = StateInformation{}
+	si = si.GetEssentialInformation(SetupPotentiallyInfiniteModel())
+
+	s = s.ConfigureState(si)
 
 }
+
 func TestClient(t *testing.T) {
 	var s State = State{}
 	s.globalVariables = SetupMap()
