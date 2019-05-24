@@ -487,7 +487,7 @@ func TestMarshal2(t *testing.T){
 
 func TestNetworkCommunication(t *testing.T){
 	//run main in terminal window
-	Server()
+	//Server()
 
 	fmt.Println("Everything Done")
 }
