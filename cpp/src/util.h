@@ -28,7 +28,7 @@ namespace util {
                 + " underflow: " + std::to_string(left + right)
                 + " < min:" + std::to_string(std::numeric_limits<T>::min())
                 + " (" + typeid(T).name() + ")"
-                );
+        );
         // left + right <= max .. rhs <= max - right
         _assert(left <= std::numeric_limits<T>::max() - right,
                 prefix

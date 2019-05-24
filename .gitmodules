@@ -1,0 +1,3 @@
+[submodule "cpp/lib/kissnet"]
+	path = cpp/lib/kissnet
+	url = https://github.com/Ybalrid/kissnet.git

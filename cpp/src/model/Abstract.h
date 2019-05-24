@@ -13,7 +13,7 @@ namespace model {
         Type type;
         int16_t valueOrVariable;
 
-        size_t operator()(State state) {
+        int16_t operator()(State state) {
             switch (type) {
                 case Type::Variable:
                     assert((size_t)valueOrVariable < state.variables.size());
@@ -79,7 +79,7 @@ namespace model {
                     break;
                 case AssignOperator::IncAssign: {
                     const int8_t curVal = state.variables[lhsVariable];
-                    const int8_t newVal = rhsVal + state.variables[lhsVariable];
+                    const int8_t newVal = state.variables[lhsVariable] + rhsVal;
 
                     util::enforceBoundsAddition(curVal, rhsVal,
                                                 "Increment variable[" + std::to_string(lhsVariable) + "]");

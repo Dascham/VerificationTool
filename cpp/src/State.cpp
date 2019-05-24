@@ -24,7 +24,7 @@ std::ostream &operator<<(std::ostream &os, State const &m) {
             ;
 
     for (auto loc : m.locations) {
-        os << std::setw(2) << loc << " ";
+        os << std::setw(2) << (int)loc << " ";
     }
 
     os << ">\n"

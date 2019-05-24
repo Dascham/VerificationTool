@@ -1,24 +1,26 @@
-#include <iostream>
-#include <queue>
-#include <unordered_set>
-#include <cassert>
+#include <string>
 
-#include "model/Model.h"
-#include "modelcheckers/SimpleModelChecker.h"
-#include "modelcheckers/DistributedModelChecker.h"
+#include <modelcheckers/DistributedModelChecker.h>
 
-int main() {
-    std::cout << "Welcome. Welcome to the simple_model_checker.\n"
-                 "\n"
-                 "You have chosen, or been chosen, to use one of our finest non-distributed model checkers.\n"
-              << std::endl;
+int main(int argc, char *argv[]) {
+    size_t workerID = 0;
+
+    if (argc > 1) {
+        int wID = std::stoi(argv[1]);
+        if (wID < 0) {
+            fprintf(stderr, "workerID(%d) cannot be negative", wID);
+            exit(1);
+        }
+        workerID = wID;
+    }
+    printf("workerID: %zu\n", workerID);
 
     using namespace model;
     using namespace modelcheckers;
 
     constexpr size_t numVars = 1;
 
-    SimpleModelChecker simpleModelChecker{Model{
+    DistributedModelChecker modelChecker{workerID, Model{
         numVars,
         {
             Automaton{{
@@ -26,10 +28,9 @@ int main() {
                     Edge{1, Guard{{
                         Predicate{Term{Term::Type::Variable, 0}, Predicate::ComparisonOperator::LessThan, Term{Term::Type::Constant, 127}},
                         Predicate{Term{Term::Type::Variable, 0}, Predicate::ComparisonOperator::GreaterThan, Term{Term::Type::Constant, -128}}
-                    }}, Update{{
-                        Assignment{0, Assignment::AssignOperator::IncAssign, Term{Term::Type::Constant, -1}}
-                    }}},
-
+                        }}, Update{{
+                            Assignment{0, Assignment::AssignOperator::IncAssign, Term{Term::Type::Constant, -1}}
+                        }}},
                 }},
                 Location{Invariant{}, {
                     Edge{0, Guard{{
@@ -39,7 +40,10 @@ int main() {
             }}
         }
     }};
-    simpleModelChecker.checkModel();
+    modelChecker.checkModel();
+
+    // TODO: ASSERT model loc,var sizes == constants, do first?
+
 
     return 0;
 }
