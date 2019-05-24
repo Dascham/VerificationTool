@@ -54,6 +54,35 @@ func Client() {
 	}
 	fmt.Println("Client done")
 }
+func Client2(){
+	var template Template = MainSetupCounterModel()
+	var s State = State{}
+	s.globalVariables = map[string]int{"x":5}
+	s.allTemplates = make([]Template, 0,0)
+	s.allTemplates = append(s.allTemplates, template)
+
+	var si StateInformation = StateInformation{}
+	si = si.GetEssentialInformation(s)
+
+	jsonbytes, err := json.Marshal(si)
+	if (err != nil) {
+		fmt.Printf("Marshall error: %s\n", err)
+	}
+	conn, err1 := net.Dial("tcp", "127.0.0.1:5000")
+	fmt.Println("Dialed")
+	if err1 != nil {
+		fmt.Printf("Something went wrong %s \n", err)
+	}
+	_, err2 := conn.Write(jsonbytes)
+	if err2 != nil{
+		fmt.Printf("Error: %s", err2)
+	}
+	err = conn.Close()
+	if (err != nil) {
+		fmt.Printf("printing error: %s", err)
+	}
+	fmt.Println("Client done")
+}
 
 func Server() {
 	channel := make(chan StateInformation)

@@ -17,27 +17,36 @@ func (i Invariant) iPrintln() {
 }
 
 func (i Invariant) IsValid(localVariables map[string]int) bool {
-	result := false
-	if (!ValidValue(localVariables[i.VariableToEvaluate])){
-		return false
+	var result bool = false
+	if (i.VariableToEvaluate == ""){ //if there ain't no variable to evaluate, must be empty invariant, and that's fine
+		return true
+	}
+	x, ok := localVariables[i.VariableToEvaluate]
+	y, ok1 := localVariables[i.InvariantVar]
+	if(!ok1){
+		y = i.InvariantValue
 	}
 
-	if _, ok := localVariables[i.VariableToEvaluate]; ok || i.VariableToEvaluate=="" {
-		switch i.ComparisonOperator {
-		case "<":
-			if (localVariables[i.VariableToEvaluate] < i.InvariantValue) {
+	if (ok) {
+		if(!ValidValue(x)){
+			return false
+		}else {
+			switch i.ComparisonOperator {
+			case "<":
+				if (x < y) {
+					result = true
+				}
+			case ">":
+				if (x > y) {
+					result = true
+				}
+			case "==":
+				if (x == y) {
+					result = true
+				}
+			case "":
 				result = true
 			}
-		case ">":
-			if (localVariables[i.VariableToEvaluate] > i.InvariantValue) {
-				result = true
-			}
-		case "==":
-			if (localVariables[i.VariableToEvaluate] == i.InvariantValue) {
-				result = true
-			}
-		case "":
-			result = true
 		}
 	}
 	return result

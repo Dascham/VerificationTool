@@ -1,44 +1,12 @@
 package main
 
-import (
-	"encoding/json"
-	"fmt"
-	"net"
-)
-
 //IF A STRUCT IS TO BE MARSHALLED, ONE SHOULD "EXPORT" THE FIELDS/ATTRIBUTES OF THAT STRUCT
 //EXPORTING THE FIELDS IS DONE BY HAVING THE NAME OF THE FIELDS, CAPITALIZED. CAPITALIZATION OF THE NAME OF A
 //FIELD, EXPORTS IT.
 
 func main(){
-	var template Template = MainSetupCounterModel()
-	var s State = State{}
-	s.globalVariables = map[string]int{"x":5}
-	s.allTemplates = make([]Template, 0,0)
-	s.allTemplates = append(s.allTemplates, template)
-
-	var si StateInformation = StateInformation{}
-	si = si.GetEssentialInformation(s)
-
-	jsonbytes, err := json.Marshal(si)
-	if (err != nil) {
-		fmt.Printf("Marshall error: %s\n", err)
-	}
-	conn, err1 := net.Dial("tcp", "127.0.0.1:5000")
-	fmt.Println("Dialed")
-	if err1 != nil {
-		fmt.Printf("Something went wrong %s \n", err)
-	}
-	_, err2 := conn.Write(jsonbytes)
-	if err2 != nil{
-		fmt.Printf("Error: %s", err2)
-	}
-	err = conn.Close()
-	if (err != nil) {
-		fmt.Printf("printing error: %s", err)
-	}
-	fmt.Println("Client done")
-
+	list := Explore(SetupSimpleSyncModel())
+	PrintStates(list)
 }
 
 func Explore(initialState State) []State{
@@ -102,7 +70,6 @@ func Explore(initialState State) []State{
 						//add only if map is valid, this should be made to better fix
 						if (ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(currentState.globalVariables)) {
 							waitingList = append(waitingList, newState)
-							println("add to waitinglist")
 						}
 					}
 				}

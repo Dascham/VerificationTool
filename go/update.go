@@ -12,22 +12,28 @@ type Update struct {
 	updateVar string
 }
 func (u Update) Update(newMap map[string]int) {
-	if _, ok := newMap[u.variableToUpdate]; ok{
+	x, ok := newMap[u.variableToUpdate]
+	y, ok1 := newMap[u.updateVar]
+	if(!ok1) { //if updateVar == "", i.e. not in map, then we just use updatevalue
+		y = u.updateValue
+	}
+
+	if(ok) {
 		switch u.operator {
 		case "+", "+=":
-			newMap[u.variableToUpdate] = newMap[u.variableToUpdate] + u.updateValue
+			newMap[u.variableToUpdate] = x + y
 		case "-", "-=":
-			newMap[u.variableToUpdate] = newMap[u.variableToUpdate] - u.updateValue
+			newMap[u.variableToUpdate] = x - y
 		case "*", "*=":
-			newMap[u.variableToUpdate] = newMap[u.variableToUpdate] * u.updateValue
+			newMap[u.variableToUpdate] = x * y
 		case "/", "/=":
-			newMap[u.variableToUpdate] = newMap[u.variableToUpdate] / u.updateValue
+			newMap[u.variableToUpdate] = x / y
 		case "=":
-			newMap[u.variableToUpdate] = u.updateValue
+			newMap[u.variableToUpdate] = y
 		case "++":
-			newMap[u.variableToUpdate] = newMap[u.variableToUpdate] + 1
+			newMap[u.variableToUpdate] = x + 1
 		case "--":
-			newMap[u.variableToUpdate] = newMap[u.variableToUpdate] - 1
+			newMap[u.variableToUpdate] = x - 1
 		case "":
 			break
 		}

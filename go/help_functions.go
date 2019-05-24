@@ -81,7 +81,11 @@ func removeLocation(a []*Location, i int) []*Location {
 	return a
 }
 //
+//
+//
 /*------------------------------- Functions that setup models to be model checked ------------------------------------*/
+//
+//
 //
 func SetupPotentiallyInfiniteModel() State{
 	var update0 Update = Update{"x", "=", 1,""}
@@ -191,7 +195,6 @@ func SetupFullModel() Template{
 
 	return template
 }
-
 func SetupCounterModel() Template{
 	var localVariables map[string]int = map[string]int{"x":0, "y":5,"z":10}
 	var template Template = Template{}
@@ -210,6 +213,13 @@ func SetupCounterModel() Template{
 	location0 = location0.AcceptOutGoingEdges(edge)
 
 	return template
+}
+func EmptyState(t Template)State{
+	var s State = State{}
+	s.globalVariables = make(map[string]int)
+	s.allTemplates = make([]Template,0,0)
+	s.allTemplates = append(s.allTemplates, t)
+	return s
 }
 
 //a template with a single location, no edges etc.
@@ -288,9 +298,12 @@ func MainSetupCounterModel() Template{
 	return template
 }
 //
+//
+//
 /*------------------------------------------ Setup of maps used in the models ----------------------------------------*/
 //
-
+//
+//
 func SetupMap() map[string]int {
 	var localVariables map[string]int = make(map[string]int)
 	localVariables["a"] = 2

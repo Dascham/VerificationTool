@@ -11,31 +11,41 @@ type Guard struct {
 	GuardValue int
 	GuardVar string
 }
-func (g Guard) Evaluate(localVariables map[string]int) bool{
+func (g Guard) Evaluate(localVariables map[string]int) bool {
 	var result bool = false
-
-	if (!ValidValue(localVariables[g.VariableToEvaluate])){ //check on min max
-		return false
+	if(g.VariableToEvaluate == ""){
+		return true
 	}
 
-	if _, ok := localVariables[g.VariableToEvaluate]; ok || g.VariableToEvaluate == ""  {
-		switch g.ComparisonOperator {
-		case "<":
-			if (localVariables[g.VariableToEvaluate] < g.GuardValue) {
+	x, ok := localVariables[g.VariableToEvaluate] //lookup variable value, and assign to x
+	y, ok1 := localVariables[g.GuardVar]
+	//lookup right hand side variable, if in localvariables, we should use that, otherwise, we just use guardvalue
+	if (!ok1){//if no GuardVar, then use guardvalue
+		y = g.GuardValue
+	}
+
+	if (ok) {
+		if (!ValidValue(x)) { //check on min max
+			return false
+		} else {
+			switch g.ComparisonOperator {
+			case "<":
+				if (x < y) {
+					result = true
+				}
+			case ">":
+				if (x > y) {
+					result = true
+				}
+			case "==":
+				if (x == y) {
+					result = true
+				}
+			case "":
 				result = true
+			default:
+				result = false
 			}
-		case ">":
-			if (localVariables[g.VariableToEvaluate] > g.GuardValue) {
-				result = true
-			}
-		case "==":
-			if (localVariables[g.VariableToEvaluate] == g.GuardValue) {
-				result = true
-			}
-		case "":
-			result = true
-		default:
-			result = false
 		}
 	}
 	return result

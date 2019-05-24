@@ -53,8 +53,6 @@ func (e Edge) EdgeIsActive(localVariables map[string]int, s State) bool{
 		}
 	}
 
-	//eval channels, not done yet
-
 	//then eval dst invariant, where we need to update first, and then check if invariant valid
 	e.AtomicUpdate(tempMap, tempGlobal)
 	if (e.Dst.Invariant.IsValid(tempMap) || e.Dst.Invariant.IsValid(tempGlobal)) { //add one more for chan
