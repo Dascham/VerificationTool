@@ -10,12 +10,12 @@ namespace modelcheckers {
                model.automata.size()); // State should have one location index per automata
 
         if (isNew) {
-            std::cout << "New state encountered; adding to queue...\n"
-                      << state << std::endl;
+            //std::cout << "New state encountered; adding to queue...\n"
+            //          << state << std::endl;
             stateQueue.push(state);
         } else {
-            std::cout << "Already encountered state...\n"
-                      << state << std::endl;
+            //std::cout << "Already encountered state...\n"
+            //          << state << std::endl;
         }
 
         return isNew;
@@ -34,10 +34,11 @@ namespace modelcheckers {
         return true;
     }
 
-    size_t BaseModelChecker::generateSuccessors(const State &state) {
+    void BaseModelChecker::generateSuccessors(const State &state) {
         using namespace model;
 
-        size_t count = 0;
+        statistics.exploredCounter++;
+
         for (int i = 0; i < model.automata.size(); ++i) { // For each automaton
             const Automaton &automaton = model.automata[i];
 
@@ -86,7 +87,7 @@ namespace modelcheckers {
 
                                     if (checkInvariants(syncedState)) {
                                         addNewState(syncedState);
-                                        count++;
+                                        statistics.generatedCounter++;
                                     } // TODO: count both valid and non valid states
                                 }
                             }
@@ -96,14 +97,13 @@ namespace modelcheckers {
                         // Invariants for new state TODO: DRY
                         if (checkInvariants(newState)) {
                             addNewState(newState);
-                            count++;
+                            statistics.generatedCounter++;
                         } // TODO: count both valid and non valid states
                     }
                 }
             }
         }
 
-        return count;
     }
 
     void BaseModelChecker::addInitialState() {
@@ -116,6 +116,14 @@ namespace modelcheckers {
         }
 
         addNewState(initialState);
+    }
+
+    void BaseModelChecker::printStatistics() {
+        printf("Statistics:\n"
+               "\texplored: %zu\n"
+               "\tgenerated: %zu\n"
+               "\tduplicate: %zu\n",
+               statistics.exploredCounter, statistics.generatedCounter, statistics.duplicateCounter);
     }
 
 }

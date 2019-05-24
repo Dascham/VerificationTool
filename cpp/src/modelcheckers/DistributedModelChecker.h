@@ -21,12 +21,50 @@ namespace modelcheckers {
 
     // This class is intended to be the worker of the modelchecker. It depends on a master to coordinate.
     class DistributedModelChecker : public BaseModelChecker {
-
+    private:
         std::vector<SocketThread> socketThreads{WORKER_COUNT - 1};
         std::vector<kn::tcp_socket> outgoingSockets{WORKER_COUNT};
 
+        kn::tcp_socket masterSocket{kn::endpoint{localhost, MASTER_PORT}};
+
         const size_t workerID;
         bool running = true;
+
+
+        MasterPacket receiveMasterPacket() {
+            kn::buffer<2> buffer;
+            auto packet = masterSocket.recv(buffer);
+
+            MasterPacket masterPacket{(MasterPacket::Type)buffer[0], (uint8_t)buffer[1]};
+            return masterPacket;
+        }
+
+        void sendWorkerPacket(WorkerPacket workerPacket) {
+            kn::buffer<2> buffer;
+            buffer[0] = static_cast<std::byte>(workerPacket.type);
+            buffer[1] = static_cast<std::byte>(workerPacket.data);
+
+            masterSocket.send(buffer);
+        }
+
+        void sendState(State state, kn::tcp_socket &socket) {
+            assert(state.locations.size() == MODEL_AUTOMATA);
+            assert(state.variables.size() == MODEL_VARIABLES);
+
+            kn::buffer<MODEL_AUTOMATA> locationBuffer;
+            kn::buffer<MODEL_VARIABLES> variableBuffer;
+
+            for (int i = 0; i < locationBuffer.size(); ++i) {
+                locationBuffer[i] = static_cast<std::byte>(state.locations[i]);
+            }
+
+            for (int i = 0; i < variableBuffer.size(); ++i) {
+                variableBuffer[i] = static_cast<std::byte>(state.variables[i]);
+            }
+
+            socket.send(locationBuffer);
+            socket.send(variableBuffer);
+        }
 
     protected:
 
@@ -48,8 +86,7 @@ namespace modelcheckers {
             while (!stateQueue.empty()) {
                 State current = stateQueue.front();
                 stateQueue.pop();
-
-                int generatedCounter = generateSuccessors(current);
+                generateSuccessors(current);
             }
         }
 
@@ -87,7 +124,6 @@ namespace modelcheckers {
 
             // Connect to master
             printf("Connecting to master... \n");
-            kn::tcp_socket masterSocket(kn::endpoint{localhost, MASTER_PORT});
             while (!masterSocket.connect()); // Keep trying until we succeed (or we run out of cake)
             printf("Connected to master!\n");
 
@@ -112,13 +148,7 @@ namespace modelcheckers {
             printf("Waiting for all workers to connect...\n");
             incomingThread.join();
 
-            printf("Joining all SocketThreads...\n");
-            for (size_t i = 0; i < socketThreads.size(); ++i) {
-                printf("Trying to join SocketThread %zu...", i);
-                socketThreads[i].join();
-            }
-
-
+            printf("Ready!\n\n");
             //addInitialState();
 
             DoneState doneState = DoneState::NotDone;
@@ -146,61 +176,72 @@ namespace modelcheckers {
 
                 //bool justDone = false;
 
-                /*for (int i = 0; i < 3; ++i)*/ { // TODO: while master has bytes?
+                /*for (int i = 0; i < 3; ++i)*/if (masterSocket.bytes_available() < 2) std::this_thread::sleep_for(.1s); else { // TODO: while master has bytes?
                     // TODO: actually read from master(respond to is(still)done)
 
                     //kn::buffer<2> buffer;
                     //auto packet = masterSocket.recv(buffer);
 
-                    MasterPacket masterPacket{MasterPacket::Type::Terminate, 0}; // TODO: actually send responses
+                    MasterPacket masterPacket = receiveMasterPacket();//{MasterPacket::Type::Terminate, 0};
                     switch (masterPacket.type) {
                         case MasterPacket::Type::InitialState:
+                            printf(">Initial State:\n"
+                                   "\tAdding initial state to queue!\n");
                             addInitialState();
                             goto continue_running;
                         case MasterPacket::Type::IsDone:
+                            printf(">IsDone?:\n");
                             if (!didWork) {
+                                printf("\tResponding FirstDone(%u) to master!\n", masterPacket.data);
                                 doneState = DoneState::FirstDone;
                                 doneID = masterPacket.data;
 
                                 WorkerPacket response{WorkerPacket::Type::FirstDone, masterPacket.data};
-                                // TODO: send
+                                sendWorkerPacket(response);
                             } else {
+                                printf("\tResponding NotDone(%u) at IsDone to master!\n", masterPacket.data);
                                 WorkerPacket response{WorkerPacket::Type::NotDone, masterPacket.data};
-                                // TODO: send
+                                sendWorkerPacket(response);
                             }
                             goto continue_running;
                         case MasterPacket::Type::IsStillDone:
+                            printf(">IsStillDone?:\n");
                             if (doneState != DoneState::FirstDone) {
+                                printf("\tResponding NotDone(%u) to master!\n", masterPacket.data);
                                 WorkerPacket response{WorkerPacket::Type::NotDone, masterPacket.data};
-                                // TODO: send
+                                sendWorkerPacket(response);
                             } else {
+                                printf("\tChecking SocketThread queues one last time...\n");
                                 for (auto &socketThread : socketThreads) {
                                     auto queue = socketThread.stealQueue();
 
                                     if (!queue.empty()) {
+                                        printf("\tResponding NotDone(%u) to master!\n", masterPacket.data);
                                         WorkerPacket response{WorkerPacket::Type::NotDone, masterPacket.data};
-                                        // TODO: send
+                                        sendWorkerPacket(response);
 
                                         addStateQueue(queue);
 
                                         goto continue_running;
                                     }
-
-                                    doneState = DoneState::SecondDone;
-                                    assert(doneID == masterPacket.data);
-
-                                    WorkerPacket response{WorkerPacket::Type::SecondDone, masterPacket.data};
-                                    // TODO: send
                                 }
+
+                                printf("\tResponding SecondDone(%u) to master!\n", masterPacket.data);
+                                doneState = DoneState::SecondDone;
+                                assert(doneID == masterPacket.data);
+
+                                WorkerPacket response{WorkerPacket::Type::SecondDone, masterPacket.data};
+                                sendWorkerPacket(response);
                             }
 
                             // Let it continue until it is told to terminate or receives a State.
                             goto continue_running;
                         case MasterPacket::Type::Terminate:
+                            printf(">Terminate:\n");
                             if (didWork || doneState != DoneState::SecondDone) {
-                                fprintf(stderr, "Worker terminated early!\n"
-                                                "didWork: %s\n"
-                                                "doneState: %s\n",
+                                fprintf(stderr, "\tWorker terminated early!\n"
+                                                "\t\tdidWork: %s\n"
+                                                "\t\tdoneState: %s\n",
                                         didWork ? "true" : "false",
                                         (doneState == DoneState::NotDone) ? "NotDone" :
                                         (doneState == DoneState::FirstDone) ? "FirstDone" :
@@ -208,17 +249,30 @@ namespace modelcheckers {
                                         "INVALID");
                                 exit(1);
                             } else {
-                                printf("Terminating worker successfully!\n");
-                                exit(0);
+                                printf("\tTerminating worker successfully!\n");
+                                goto finish_running;
                             }
                         default:
-                            fprintf(stderr, "Invalid packet from master (%u)", (uint8_t) masterPacket.type);
+                            fprintf(stderr, ">Invalid packet from master (%u)", (uint8_t) masterPacket.type);
                             exit(1);
                     }
                 }
 
                 continue_running:;
+
             }
+            finish_running:
+
+            printf("Joining all SocketThreads...\n");
+            for (size_t i = 0; i < socketThreads.size(); ++i) {
+                printf("Trying to join SocketThread %zu...", i);
+                socketThreads[i].join();
+            }
+
+            printf("Model Checker finished!\n");
+
+            printStatistics();
+
         }
 
         explicit DistributedModelChecker(size_t workerID, model::Model model)

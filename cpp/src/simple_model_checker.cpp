@@ -8,10 +8,7 @@
 #include "modelcheckers/DistributedModelChecker.h"
 
 int main() {
-    std::cout << "Welcome. Welcome to the simple_model_checker.\n"
-                 "\n"
-                 "You have chosen, or been chosen, to use one of our finest non-distributed model checkers.\n"
-              << std::endl;
+    printf("Welcome to the simple_model_checker.\n");
 
     using namespace model;
     using namespace modelcheckers;

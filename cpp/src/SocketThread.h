@@ -82,7 +82,8 @@ public:
     // Used to hand over the queue to the worker thread
     std::queue<State> &&stealQueue() {
         std::unique_lock lock{mutex};
-        return std::move(queue);
+        auto stolenQueue = std::move(queue);
+        return std::move(stolenQueue);
     }
 
     void join() {

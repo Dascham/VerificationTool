@@ -16,20 +16,15 @@ namespace modelcheckers {
         void checkModel() override {
             addInitialState();
 
-            size_t exploredCounter = 0;
-            size_t generatedCounter = 1; // Start with initial state "generated"
-
             while (!stateQueue.empty()) {
                 State current = stateQueue.front();
                 stateQueue.pop();
 
-                exploredCounter++;
-                generatedCounter += generateSuccessors(current);
+                generateSuccessors(current);
             }
 
-            std::cout << "Explored states: " << exploredCounter << std::endl;
-            std::cout << "Generated states: " << generatedCounter << std::endl;
-            std::cout << "Duplicate states: " << generatedCounter - exploredCounter << std::endl;
+            printStatistics();
+            assert(statistics.duplicateCounter == statistics.generatedCounter-statistics.exploredCounter);
         }
 
         explicit SimpleModelChecker(model::Model model) : BaseModelChecker{std::move(model)} {}

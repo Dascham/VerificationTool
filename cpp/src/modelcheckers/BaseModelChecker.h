@@ -28,10 +28,11 @@ namespace modelcheckers {
 
             virtual bool addNewState(const State &state);
             bool checkInvariants(const State &state);
-            size_t generateSuccessors(const State &state);
+            void generateSuccessors(const State &state);
 
             void addInitialState();
 
+            void printStatistics();
     public:
             virtual void checkModel() = 0;
 

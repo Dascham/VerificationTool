@@ -40,3 +40,6 @@ add_executable(worker
         src/modelcheckers/BaseModelChecker.cpp
         )
 target_link_libraries(worker Threads::Threads)
+
+add_custom_target(distributed_master_worker)
+add_dependencies(distributed_master_worker master worker)
