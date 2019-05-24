@@ -34,8 +34,3 @@ func (t Template) ToString()string{
 
 	return sb.String()
 }
-
-//function that should enumerate all locations, done by following pointers
-func (t Template) PrettyPrint(){
-
-}

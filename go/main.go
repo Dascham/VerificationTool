@@ -3,13 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"hash/fnv"
 	"net"
 )
-
-const MaxValue = 128
-const MinValue = -127
-
 
 //IF A STRUCT IS TO BE MARSHALLED, ONE SHOULD "EXPORT" THE FIELDS/ATTRIBUTES OF THAT STRUCT
 //EXPORTING THE FIELDS IS DONE BY HAVING THE NAME OF THE FIELDS, CAPITALIZED. CAPITALIZATION OF THE NAME OF A
@@ -44,14 +39,6 @@ func main(){
 	}
 	fmt.Println("Client done")
 
-}
-
-func remove(a []State, i int) []State {
-	a[i] = a[len(a)-1] // Copy last element to index i.
-	a[len(a)-1] = State{} // Erase last element (write zero value).
-	a = a[:len(a)-1]   //truncate slice
-
-	return a
 }
 
 func Explore(initialState State) []State{
@@ -159,123 +146,4 @@ func FindSyncEdges(e Edge, currentState State, activeTemplate int) ([]Edge, bool
 	}
 
 	return foundEdges, result, templateNumbers
-}
-
-
-func Hash(s string) uint32 {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	return h.Sum32()
-}
-
-func MainSetupCounterModel() Template{
-	var localVariables map[string]int = map[string]int{"x":0}
-	var template Template = Template{}
-	template.LocalVariables = localVariables
-	var location0 Location = NewLocation("L0", Invariant{})
-	template.InitialLocation = &location0
-	template.currentLocation = &location0
-
-	//update
-	var update Update = Update{"x", "++", 0}
-	//edge
-	var edge Edge = Edge{}
-	edge = edge.InitializeEdge()
-	edge = edge.AcceptUpdates(update)
-	edge = edge.AssignSrcDst(&location0, &location0)
-
-	location0 = location0.AcceptOutGoingEdges(edge)
-	return template
-}
-
-func MainSetupMap() map[string]int {
-	var localVariables map[string]int = make(map[string]int)
-	localVariables["a"] = 2
-	localVariables["b"] = 7
-	return localVariables
-}
-
-func CopyMap(originalMap map[string]int) map[string]int{
-	var newMap map[string]int = make(map[string]int)
-	for key, value := range originalMap {
-		newMap[key] = value
-	}
-	return newMap
-}
-
-func DeepCopyState(s State) State{
-	var newState State = State{}
-	//newState.allTemplates = s.allTemplates
-
-	//old way
-	newState.allTemplates = make([]Template, 0,0)
-	//copy templates
-
-	for i := 0; i<len(s.allTemplates);i++{
-		newState.allTemplates = append(newState.allTemplates, s.allTemplates[i])
-	}
-
-	newState.globalVariables = CopyMap(s.globalVariables)
-
-	for i := 0; i<len(s.allTemplates);i++ {
-		newState.allTemplates[i].LocalVariables = CopyMap(s.allTemplates[i].LocalVariables)
-	}
-
-	return newState
-}
-
-func SetupSimpleSyncModel() State{
-	var initialState State = State{}
-	initialState.globalVariables = map[string]int{"y":8,"z":5}
-	//guards
-	var guard0 Guard = Guard{"x", "==", 0}
-	var guard1 Guard = Guard{"z", "<", 10}
-	var update0 Update = Update{"y", "++", 0}
-	var update1 Update = Update{"y", "*", 2}
-	var invariant0 Invariant = Invariant{"z", "<", 10}
-	var location0 Location = NewLocation("L0", Invariant{})
-	var Location1 Location = NewLocation("L1", Invariant{})
-	var location2 Location = NewLocation("L2", Invariant{})
-	var location3 Location = NewLocation("L3", invariant0)
-
-
-	var edge0 Edge = Edge{}
-	edge0 = edge0.InitializeEdge()
-	edge0 = edge0.AcceptGuards(guard0)
-	edge0 = edge0.AcceptUpdates(update0)
-	edge0 = edge0.AssignSrcDst(&location0, &Location1)
-	edge0.Ch = "a"
-	edge0.IsSend = true
-
-	var edge1 Edge = Edge{}
-	edge1 = edge1.InitializeEdge()
-	edge1 = edge1.AcceptGuards(guard1)
-	edge1 = edge1.AcceptUpdates(update1)
-	edge1 = edge1.AssignSrcDst(&location2, &location3)
-	edge1.Ch = "a"
-	edge1.IsSend = false
-
-	location0 = location0.AcceptOutGoingEdges(edge0)
-	location2 = location2.AcceptOutGoingEdges(edge1)
-
-	//template0
-	var template0 Template = Template{}
-	template0.LocalVariables = map[string]int{"x":0}
-	template0.InitialLocation = &location0
-	template0.currentLocation = &location0
-
-	var template1 Template = Template{}
-	template1.LocalVariables = make(map[string]int) //let be empty
-	template1.InitialLocation = &location2
-	template1.currentLocation = &location2
-
-	initialState.allTemplates = append(initialState.allTemplates, template0, template1)
-
-	return initialState
-}
-
-func PrintStates(list []State) {
-	for _, s := range list{
-		fmt.Printf(s.ToString()+"\n")
-	}
 }

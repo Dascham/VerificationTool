@@ -9,8 +9,6 @@ import (
 type State struct {
 	allTemplates []Template
 	globalVariables map[string]int
-
-
 }
 //this to string produces the following format:
 //(TemplateID ValueofLocalvariables)* ValueofGlobalVariables
@@ -60,10 +58,3 @@ func configLocation(t Template, locationid int) *Location{
 	return correctLocation
 }
 
-func removeLocation(a []*Location, i int) []*Location {
-	a[i] = a[len(a)-1] // Copy last element to index i.
-	a[len(a)-1] = &Location{} // Erase last element (write zero value).
-	a = a[:len(a)-1]   //truncate slice
-
-	return a
-}

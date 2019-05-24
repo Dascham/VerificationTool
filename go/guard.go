@@ -9,18 +9,16 @@ type Guard struct {
 	VariableToEvaluate string
 	ComparisonOperator string
 	GuardValue int
+	GuardVar string
 }
-//a function that only applies to guards
 func (g Guard) Evaluate(localVariables map[string]int) bool{
 	var result bool = false
 
-	if (MinValue < localVariables[g.VariableToEvaluate] && localVariables[g.VariableToEvaluate] < MaxValue){
-
-	} else {
+	if (!ValidValue(localVariables[g.VariableToEvaluate])){ //check on min max
 		return false
 	}
 
-	if _, ok := localVariables[g.VariableToEvaluate]; ok || g.VariableToEvaluate==""  {
+	if _, ok := localVariables[g.VariableToEvaluate]; ok || g.VariableToEvaluate == ""  {
 		switch g.ComparisonOperator {
 		case "<":
 			if (localVariables[g.VariableToEvaluate] < g.GuardValue) {
@@ -50,3 +48,4 @@ func (g Guard) ToString()string{
 	sb.WriteString("\n")
 	return sb.String()
 }
+

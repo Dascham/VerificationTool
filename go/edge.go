@@ -15,16 +15,13 @@ type Edge struct {
 	Update []Update
 	name string
 }
-
 //! is send
 //? is receive
-
 func (e Edge) InitializeEdge() Edge{
 	e.Guard = make([]Guard, 0, 0)
 	e.Update = make([]Update, 0, 0)
 	return e
 }
-
 func (e Edge) AcceptUpdates(args ...Update) Edge{
 	for i := 0; i < len(args); i++{
 		e.Update = append(e.Update, args[i])
@@ -37,7 +34,6 @@ func (e Edge) AcceptGuards(args ...Guard) Edge{
 	}
 	return e
 }
-
 func (e Edge) AssignSrcDst(src *Location, dst *Location) Edge{
 	e.Src = src
 	e.Dst = dst
@@ -69,25 +65,6 @@ func (e Edge) EdgeIsActive(localVariables map[string]int, s State) bool{
 
 	return result
 }
-
-func ValidMap(a map[string]int) bool{
-	for _,value := range a{
-		if (ValidValue(value)){
-
-		} else {
-			return false
-		}
-	}
-	return true
-}
-func ValidValue(a int) bool{
-	if (MinValue < a && a < MaxValue){
-		return true
-	}else {
-		return false
-	}
-}
-
 func (e Edge) AtomicUpdate(localVariables, globalVariables map[string]int) Edge{
 	for i:=0;i<len(e.Update);i++{
 		e.Update[i].Update(localVariables)

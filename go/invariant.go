@@ -10,6 +10,7 @@ type Invariant struct {
 	VariableToEvaluate string
 	ComparisonOperator string
 	InvariantValue int
+	InvariantVar string
 }
 func (i Invariant) iPrintln() {
 	fmt.Printf("'%s':'%s':'%s'", i.VariableToEvaluate, i.ComparisonOperator, strconv.Itoa(i.InvariantValue))
@@ -17,10 +18,7 @@ func (i Invariant) iPrintln() {
 
 func (i Invariant) IsValid(localVariables map[string]int) bool {
 	result := false
-
-	if (MinValue < localVariables[i.VariableToEvaluate] && localVariables[i.VariableToEvaluate] < MaxValue){
-
-	} else {
+	if (!ValidValue(localVariables[i.VariableToEvaluate])){
 		return false
 	}
 

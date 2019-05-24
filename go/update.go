@@ -9,6 +9,7 @@ type Update struct {
 	variableToUpdate string
 	operator string
 	updateValue int
+	updateVar string
 }
 func (u Update) Update(newMap map[string]int) {
 	if _, ok := newMap[u.variableToUpdate]; ok{

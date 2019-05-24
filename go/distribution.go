@@ -8,6 +8,7 @@ import (
 	"net"
 )
 
+//StateInformation contains the information transmitted between nodes
 type StateInformation struct{
 	GlobalVariables map[string]int
 	ListLocalVariables []map[string]int
@@ -53,7 +54,6 @@ func Client() {
 	}
 	fmt.Println("Client done")
 }
-
 
 func Server() {
 	channel := make(chan StateInformation)
