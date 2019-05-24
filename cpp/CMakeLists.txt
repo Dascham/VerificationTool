@@ -22,14 +22,13 @@ add_executable(cpp
         src/State.cpp)
 
 
-add_executable(distributed_model_checker
+add_executable(simple_model_checker
         src/simple_model_checker.cpp
         src/State.cpp
-        src/modelcheckers/SimpleModelChecker.h
-        src/modelcheckers/DistributedModelChecker.h src/modelcheckers/BaseModelChecker.h src/modelcheckers/BaseModelChecker.cpp
+        src/modelcheckers/BaseModelChecker.cpp
         )
 
-target_link_libraries(distributed_model_checker Threads::Threads)
+target_link_libraries(simple_model_checker Threads::Threads)
 
 add_executable(master
         src/master.cpp
