@@ -8,26 +8,41 @@ import (
 	"net"
 )
 
-func Client() {
-	//prep some data to send
-	var s State = State{}
-	jsonbytes, err := json.Marshal(s)
-	println("Printing json string")
-	fmt.Println(string(jsonbytes))
-	//var address string = "127.0.0.1:"+os.Args[1] //should be first argument
+type StateInformation struct{
+	GlobalVariables map[string]int
+	ListLocalVariables []map[string]int
+	CurrentLocationIds []int
+}
 
+func (si StateInformation) GetEssentialInformation(s State) StateInformation{
+	si.GlobalVariables = CopyMap(s.globalVariables)
+
+	for _, template := range s.allTemplates{
+		si.ListLocalVariables = append(si.ListLocalVariables, CopyMap(template.LocalVariables))
+		si.CurrentLocationIds = append(si.CurrentLocationIds, template.currentLocation.LocationId)
+	}
+	return si
+}
+
+func Client() {
+	var template Template = MainSetupCounterModel()
+	var s State = State{}
+	s.globalVariables = map[string]int{"x":5}
+	s.allTemplates = make([]Template, 0,0)
+	s.allTemplates = append(s.allTemplates, template)
+
+	var si StateInformation = StateInformation{}
+	si = si.GetEssentialInformation(s)
+
+	jsonbytes, err := json.Marshal(si)
 	if (err != nil) {
 		fmt.Printf("Marshall error: %s\n", err)
 	}
-
 	conn, err1 := net.Dial("tcp", "127.0.0.1:5000")
-	fmt.Printf("Dialed\n")
+	fmt.Println("Dialed")
 	if err1 != nil {
-		// handle error
 		fmt.Printf("Something went wrong %s \n", err)
 	}
-	fmt.Printf("Going to send: ")
-	println(jsonbytes)
 	_, err2 := conn.Write(jsonbytes)
 	if err2 != nil{
 		fmt.Printf("Error: %s", err2)
@@ -36,11 +51,19 @@ func Client() {
 	if (err != nil) {
 		fmt.Printf("printing error: %s", err)
 	}
+	fmt.Println("Client done")
 }
 
 
 func Server() {
-	channel := make(chan State)
+	channel := make(chan StateInformation)
+
+	ReceiveAndPrint := func() {
+		s := <- channel
+		fmt.Println(s.GlobalVariables)
+		fmt.Println(s.ListLocalVariables)
+		fmt.Println(s.CurrentLocationIds)
+	}
 
 	ln, err := net.Listen("tcp", ":5000")
 	println("listening")
@@ -54,13 +77,12 @@ func Server() {
 		}
 		go handleConnection(conn, channel)
 		println("Handling new connection!")
+		go ReceiveAndPrint()
 	}
-	s := <- channel
-	println(s.ToString())
 
 }
 
-func handleConnection(conn net.Conn, channel chan State) {
+func handleConnection(conn net.Conn, channel chan StateInformation) {
 	//buffer := new(bytes.Buffer)
 	//var msg []byte = make([]byte, 500)
 	var buff bytes.Buffer
@@ -72,12 +94,11 @@ func handleConnection(conn net.Conn, channel chan State) {
 	fmt.Printf("Received the following message: %s", string(buff.Bytes()))
 
 	fmt.Printf("Unmarshalling\n")
-	var s State
+	var s StateInformation
 	err1 := json.Unmarshal(buff.Bytes(), &s)
 	if err1 != nil{
 		fmt.Printf("Error: %s\n",err1)
 	}
-	fmt.Println(s.ToString())
 
 	fmt.Println("Closing connection: ")
 	err2 := conn.Close()
@@ -88,20 +109,3 @@ func handleConnection(conn net.Conn, channel chan State) {
 	}
 	channel <- s //send state on channel 'channel'
 }
-
-type StateInformation struct{
-	globalVariables map[string]int
-	listLocalVariables []map[string]int
-	currentLocationIds []int
-}
-
-func (si StateInformation) GetEssentialInformation(s State) StateInformation{
-	si.globalVariables = s.globalVariables
-
-	for _, template := range s.allTemplates{
-		si.listLocalVariables = append(si.listLocalVariables, template.LocalVariables)
-		si.currentLocationIds = append(si.currentLocationIds, template.currentLocation.LocationId)
-	}
-	return si
-}
-

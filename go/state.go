@@ -33,10 +33,10 @@ func (s State) ToString() string{
 }
 
 func (s State) ConfigureState(si StateInformation) State{
-	s.globalVariables = si.globalVariables
-	for i, tempMap := range si.listLocalVariables{
-		s.allTemplates[i].LocalVariables = tempMap
-		s.allTemplates[i].currentLocation = configLocation(s.allTemplates[i], si.currentLocationIds[i])
+	s.globalVariables = CopyMap(si.GlobalVariables)
+	for i, tempMap := range si.ListLocalVariables{
+		s.allTemplates[i].LocalVariables = CopyMap(tempMap)
+		s.allTemplates[i].currentLocation = configLocation(s.allTemplates[i], si.CurrentLocationIds[i])
 	}
 
 	return s

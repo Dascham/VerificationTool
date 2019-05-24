@@ -1,22 +1,49 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"net"
 )
 
 const MaxValue = 128
 const MinValue = -127
 
+
+//IF A STRUCT IS TO BE MARSHALLED, ONE SHOULD "EXPORT" THE FIELDS/ATTRIBUTES OF THAT STRUCT
+//EXPORTING THE FIELDS IS DONE BY HAVING THE NAME OF THE FIELDS, CAPITALIZED. CAPITALIZATION OF THE NAME OF A
+//FIELD, EXPORTS IT.
+
 func main(){
-	var initialState State = SetupSimpleSyncModel()
-	var list []State = Explore(initialState)
+	var template Template = MainSetupCounterModel()
+	var s State = State{}
+	s.globalVariables = map[string]int{"x":5}
+	s.allTemplates = make([]Template, 0,0)
+	s.allTemplates = append(s.allTemplates, template)
 
-	fmt.Printf("len of list: %d \n", len(list))
+	var si StateInformation = StateInformation{}
+	si = si.GetEssentialInformation(s)
 
-	for i := 0; i < len(list);i++{
-		println(list[i].ToString())
+	jsonbytes, err := json.Marshal(si)
+	if (err != nil) {
+		fmt.Printf("Marshall error: %s\n", err)
 	}
+	conn, err1 := net.Dial("tcp", "127.0.0.1:5000")
+	fmt.Println("Dialed")
+	if err1 != nil {
+		fmt.Printf("Something went wrong %s \n", err)
+	}
+	_, err2 := conn.Write(jsonbytes)
+	if err2 != nil{
+		fmt.Printf("Error: %s", err2)
+	}
+	err = conn.Close()
+	if (err != nil) {
+		fmt.Printf("printing error: %s", err)
+	}
+	fmt.Println("Client done")
+
 }
 
 func remove(a []State, i int) []State {

@@ -10,9 +10,23 @@ func SetupMap() map[string]int {
 	var localVariables map[string]int = make(map[string]int)
 	localVariables["a"] = 2
 	localVariables["b"] = 7
-	//localVariables["x"] = 0
 	return localVariables
 }
+func SetupMap1() map[string]int {
+	var localVariables map[string]int = make(map[string]int)
+	localVariables["c"] = 6
+	localVariables["d"] = 14
+	return localVariables
+}
+func SetupMap2() map[string]int {
+	var localVariables map[string]int = make(map[string]int)
+	localVariables["y"] = 9
+	localVariables["z"] = 21
+	return localVariables
+}
+
+
+
 func SetupInvalidMap() map[string]int {
 	var localVariables map[string]int = make(map[string]int)
 	localVariables["c"] = -129
@@ -408,44 +422,72 @@ func TestExplore2(t *testing.T) {
 	PrintStates(list)
 }
 
-func TestStateInformation_GetEssentialInformation(t *testing.T) {
+func TestState_ConfigureState(t *testing.T) {
+	var template Template = SetupCounterModel()
 	var s State = State{}
 	s.globalVariables = SetupMap()
-	s.allTemplates = make([]Template, 0,0)
-	s.allTemplates = append(s.allTemplates, SetupCounterModel())
+	s.allTemplates = make([]Template, 0)
+	s.allTemplates = append(s.allTemplates, template)
+
 
 	var si StateInformation = StateInformation{}
-	si.globalVariables = make(map[string]int)
 	si = si.GetEssentialInformation(s)
 
-	if (s.globalVariables["a"] != si.globalVariables["a"] || s.globalVariables["b"] != si.globalVariables["b"]){
-		t.Errorf("function don't work")
-	}
-}
-
-func TestState_ConfigureState(t *testing.T) {
-	var s State = State{}
-	var si StateInformation = StateInformation{}
-	si = si.GetEssentialInformation(SetupPotentiallyInfiniteModel())
-
+	temp := s.ToString()
+	s.globalVariables["a"] = 15
 	s = s.ConfigureState(si)
+	if temp != s.ToString(){
+		t.Errorf("stateinformation did not properly reconfigure our state s")
+	}
+}
+
+func TestMarshal(t *testing.T) {
+	var slice []map[string]int = make([]map[string]int, 0,0)
+	slice = append(slice, SetupMap())
+	slice = append(slice, SetupMap())
+
+	fmt.Println(slice)
+
+	b, err := json.Marshal(slice)
+
+	fmt.Println(err)
+
+	fmt.Print("printing json: ")
+	fmt.Println(b)
+
+	var map1 []map[string]int = make([]map[string]int,0,0)
+	err1 := json.Unmarshal(b, &map1)
+
+	fmt.Println(err1)
+
+	fmt.Println(map1)
+}
+
+func TestMarshal2(t *testing.T){
+	//marshal stateinformation struct
+	var si StateInformation
+	si.GlobalVariables = make(map[string]int)
+	si.GlobalVariables = SetupMap()
+
+	si.ListLocalVariables = make([]map[string]int, 0,0)
+	si.ListLocalVariables = append(si.ListLocalVariables, SetupMap1(), SetupMap2())
+	var slice []int = []int{2, 5, 7, 9}
+	si.CurrentLocationIds = slice
+
+	//print si information,
+
+	jsonbytes, _:= json.Marshal(si)
+
+
+	var si1 StateInformation
+	si1.GlobalVariables = make(map[string]int)
+	_ = json.Unmarshal(jsonbytes, &si1)
 
 }
 
-func TestClient(t *testing.T) {
-	var s State = State{}
-	s.globalVariables = SetupMap()
-	s.allTemplates = append(s.allTemplates, SetupCounterModel())
-	fmt.Println(s.ToString())
-	jsonbytes, err := json.Marshal(s)
+func TestNetworkCommunication(t *testing.T){
+	//run main in terminal window
+	Server()
 
-	if err != nil{
-		fmt.Println("something wrong")
-	} else{
-		fmt.Println(jsonbytes)
-	}
-	var s1 State = State{}
-	json.Unmarshal(jsonbytes, &s1)
-	println(s1.ToString())
-	println(s1.globalVariables["b"])
+	fmt.Println("Everything Done")
 }
