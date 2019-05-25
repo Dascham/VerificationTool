@@ -15,6 +15,7 @@ const MinValue = -127
 func Hash(s string) uint32 {
 	h := fnv.New32a()
 	h.Write([]byte(s))
+
 	return h.Sum32()
 }
 func ValidValue(a int) bool{
@@ -214,11 +215,10 @@ func SetupCounterModel() Template{
 
 	return template
 }
-func EmptyState(t Template)State{
+func EmptyState()State{
 	var s State = State{}
 	s.globalVariables = make(map[string]int)
 	s.allTemplates = make([]Template,0,0)
-	s.allTemplates = append(s.allTemplates, t)
 	return s
 }
 
@@ -231,7 +231,8 @@ func SetupTemplate() Template{
 }
 func SetupSimpleSyncModel() State{
 	var initialState State = State{}
-	initialState.globalVariables = map[string]int{"y":8,"z":5}
+	initialState.globalVariables = SetupMap3()
+
 	//guards
 	var guard0 Guard = Guard{"x", "==", 0,""}
 	var guard1 Guard = Guard{"z", "<", 10,""}
@@ -320,6 +321,10 @@ func SetupMap2() map[string]int {
 	var localVariables map[string]int = make(map[string]int)
 	localVariables["y"] = 9
 	localVariables["z"] = 21
+	return localVariables
+}
+func SetupMap3()map[string]int{
+	var localVariables map[string]int = map[string]int{"y":8,"z":5}
 	return localVariables
 }
 func SetupInvalidMap() map[string]int {

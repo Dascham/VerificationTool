@@ -287,4 +287,8 @@ func TestNetworkCommunication(t *testing.T){
 	//Server()
 	//fmt.Println("Everything Done")
 }
+//in initializeNodes and getinitialized we convert a lot, test this
+func TestConversions(t *testing.T){
+
+}
 

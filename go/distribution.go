@@ -6,7 +6,12 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strconv"
 )
+//Ip addresses, master is always [0]
+var ipaddresses []string = []string{"127.0.0.1:", "127.0.0.2:"}
+var portNumbers1 []string = []string{"5000", "5001"}
+var lenOfIpaddreses uint32 = uint32(len(ipaddresses))
 
 //StateInformation contains the information transmitted between nodes
 type StateInformation struct{
@@ -24,6 +29,78 @@ func (si StateInformation) GetEssentialInformation(s State) StateInformation{
 	}
 	return si
 }
+func initializeNodes(ipaddresses []string) {
+	for i, address := range ipaddresses{
+		if (i == 0) {
+			//skip 0, cause that is the master
+			continue
+		} else{
+			conn, err := net.Dial("tcp", address+portNumbers1[1]) //1 is portnumber 5001
+			if err != nil{
+				fmt.Printf("Something wrong when dialing, initializeNode,: %s", err)
+			}
+			_, err1 := conn.Write([]byte(strconv.Itoa(i)))
+			if err1 != nil{
+				fmt.Printf("Something wrong when trying to conn.write: %s\n", err1)
+			}
+		}
+	}
+}
+func GetInitialized(){
+	ln, err := net.Listen("tcp", ":5001")
+	println("listening")
+	if err != nil {
+		fmt.Printf("Something went wrong: %s", err)
+	}
+
+	conn, err1 := ln.Accept()
+	if err1 != nil {
+		fmt.Printf("Second layer of wrong: %s", err1)
+	}
+	var buff bytes.Buffer
+	_, err2 := io.Copy(&buff, conn)
+	if err2 != nil{
+		fmt.Printf("Something with io.copy: %s", err2)
+	}
+	num, err3 := strconv.Atoi(buff.String())
+	if err3 != nil{
+		fmt.Printf("could not convert: %s", err3)
+	}
+	selfNodeNumber = num
+}
+
+func SendAState(s State, sendToNode int){
+	//get stateinformation
+	var si StateInformation = StateInformation{}
+	si = si.GetEssentialInformation(s)
+
+	json_si, err := json.Marshal(si)
+	if err != nil{
+		fmt.Println("ehhhhhhhhhhhhhhhhhhhhhhhhh")
+	}
+
+	//figure out who to send to
+	var lenOfIpaddresses uint32 = uint32(len(ipaddresses))
+	var nodeNumber uint32 = Hash(s.ToString())%lenOfIpaddresses
+	conn, err1 := net.Dial("tcp", ipaddresses[nodeNumber])
+
+	if err1 != nil{
+		fmt.Printf("Dial went wrong in SendState: %s", err1)
+	}
+
+	_, err2 := conn.Write(json_si)
+	if err2 != nil{
+		fmt.Printf("write jsonbytes went wrong: %s", err2)
+	}
+	err3 := conn.Close()
+	if err3 != nil{
+		fmt.Printf("Could not close connection: %s", err3)
+	}
+}
+
+
+
+
 
 func Client() {
 	var template Template = MainSetupCounterModel()
@@ -108,7 +185,6 @@ func Server() {
 		println("Handling new connection!")
 		go ReceiveAndPrint()
 	}
-
 }
 
 func handleConnection(conn net.Conn, channel chan StateInformation) {
@@ -138,3 +214,5 @@ func handleConnection(conn net.Conn, channel chan StateInformation) {
 	}
 	channel <- s //send state on channel 'channel'
 }
+
+
