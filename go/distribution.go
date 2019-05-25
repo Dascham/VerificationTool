@@ -9,8 +9,8 @@ import (
 	"strconv"
 )
 //Ip addresses, master is always [0]
-var ipaddresses []string = []string{"127.0.0.1", "127.28.211.53"}
-var portNumbers1 []string = []string{"5000", "5001"}
+var ipaddresses []string = []string{"127.0.0.1", "172.28.211.53"}
+var portNumbers1 []string = []string{":5000", ":5001"}
 var lenOfIpaddreses uint32 = uint32(len(ipaddresses))
 
 //StateInformation contains the information transmitted between nodes
@@ -30,21 +30,27 @@ func (si StateInformation) GetEssentialInformation(s State) StateInformation{
 	return si
 }
 func initializeNodes(ipaddresses []string) {
-	conn, err := net.Dial("tcp", "127.28.211.53:5000") //1 is portnumber 5001
-	if err != nil {
-		fmt.Printf("Something wrong when dialing, initializeNode,: %s\n", err)
-	}
-	_, err1 := conn.Write([]byte(strconv.Itoa(1)))
-	if err1 != nil {
-		fmt.Printf("Something wrong when trying to conn.write: %s\n", err1)
-	}
-	err2 := conn.Close()
-	if err2 != nil{
-		fmt.Printf("Could not close connection: %s", err2)
+	for i, address := range ipaddresses {
+		if (i == 0){
+			continue
+		} else {
+			conn, err := net.Dial("tcp", address+portNumbers1[1]) //1 is portnumber 5001
+			if err != nil {
+				fmt.Printf("Something wrong when dialing, initializeNode,: %s\n", err)
+			}
+			_, err1 := conn.Write([]byte(strconv.Itoa(i)))
+			if err1 != nil {
+				fmt.Printf("Something wrong when trying to conn.write: %s\n", err1)
+			}
+			err2 := conn.Close()
+			if err2 != nil {
+				fmt.Printf("Could not close connection: %s", err2)
+			}
+		}
 	}
 }
 func GetInitialized(){
-	ln, err := net.Listen("tcp", ":5000")
+	ln, err := net.Listen("tcp", portNumbers1[1]) //portnumbers1[1], is port 5001
 	println("listening")
 	if err != nil {
 		fmt.Printf("Something went wrong: %s", err)
