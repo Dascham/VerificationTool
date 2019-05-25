@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 //Ip addresses, master is always [0]
-var ipaddresses []string = []string{"127.0.0.1:", "127.28.211.53:"}
+var ipaddresses []string = []string{"127.0.0.1", "127.28.211.53"}
 var portNumbers1 []string = []string{"5000", "5001"}
 var lenOfIpaddreses uint32 = uint32(len(ipaddresses))
 
@@ -38,6 +38,10 @@ func initializeNodes(ipaddresses []string) {
 	if err1 != nil {
 		fmt.Printf("Something wrong when trying to conn.write: %s\n", err1)
 	}
+	err2 := conn.Close()
+	if err2 != nil{
+		fmt.Printf("Could not close connection: %s", err2)
+	}
 }
 func GetInitialized(){
 	ln, err := net.Listen("tcp", ":5001")
@@ -59,6 +63,12 @@ func GetInitialized(){
 	if err3 != nil{
 		fmt.Printf("could not convert: %s", err3)
 	}
+
+	err4 := conn.Close()
+	if err4 != nil{
+		fmt.Printf("Could not close connection: %s", err4)
+	}
+
 	selfNodeNumber = num
 }
 
