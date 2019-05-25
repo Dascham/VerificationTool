@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"time"
 )
 //Ip addresses, master is always [0]
 var ipaddresses []string = []string{"127.0.0.1", "172.28.211.53"}
@@ -102,6 +103,7 @@ func SendAState(s State, sendToNode uint32){
 		fmt.Printf("Could not close connection: %s", err3)
 	}
 }
+//was 'ReceiveAState', master and node run this function, always
 func ReceiveStates(channel chan State, s State) {
 	ln, err := net.Listen("tcp", portNumbers1[1]) //5001
 	println("listening")
@@ -113,10 +115,11 @@ func ReceiveStates(channel chan State, s State) {
 		if err != nil {
 			fmt.Printf("Second layer of wrong")
 		}
-		go PutStateInChannel(conn, channel, s)
+		go HelperPutStateInChannel(conn, channel, s)
 	}
 }
-func PutStateInChannel(conn net.Conn, channel chan State, s State) {
+//helper function for ReceiveStates
+func HelperPutStateInChannel(conn net.Conn, channel chan State, s State) {
 	//buffer := new(bytes.Buffer)
 	//var msg []byte = make([]byte, 500)
 	var buff bytes.Buffer
@@ -142,16 +145,150 @@ func PutStateInChannel(conn net.Conn, channel chan State, s State) {
 	channel <- s //send state on channel 'channel'
 }
 
-func SendExploredStates(){
+//
+/*--------Functions for sync donezo----------*/
+//
+
+/*
+func MasterSyncDone() {
+	//query nodes if we done, periodically
 
 }
 
-func ReceiveExploredStates() []State{
+
+func NodeSyncDone(chanDonezo chan bool){
+	for {
+		select {
+		case <- chanDonezo:
+			ln, err := net.Listen("tcp", portNumbers1[2]) //port ???
+
+			if err != nil {
+				fmt.Printf("Something went wrong: %s\n", err)
+			}
+			//follow protocol from here
+
+
+
+			default:
+				time.Sleep(2*time.Second)
+				break;
+		}
+	}
+}
+
+
+func NodeSyncDone(chanDonezo chan bool) {
+	ln, err := net.Listen("tcp", portNumbers1[2]) //port ????
+
+	if err != nil {
+		fmt.Printf("Something went wrong: %s\n", err)
+	}
+	for {
+		conn, err1 := ln.Accept()
+		if err1 != nil {
+			fmt.Printf("%s\n", err1)
+		}
+		var buff bytes.Buffer
+		_, err2 := io.Copy(&buff, conn)
+		if err2 != nil {
+			fmt.Printf("%s\n", err2)
+		}
+		if buff.String() == "you done" {
+			select {
+			case <- chanDonezo:
+				_, err3 := conn.Write([]byte("yes"))
+				if err3 != nil {
+					fmt.Printf("%s", err3)
+				}
+				_, err6 := io.Copy(&buff, conn)
+				if buff.String() == "we all done" {
+					chanDonezo <- true
+				}
+
+			} else {
+				_, err4 := conn.Write([]byte("no"))
+				if err4 != nil {
+					fmt.Printf("%s", err4)
+				}
+				err5 := conn.Close()
+				if err5 != nil {
+					fmt.Printf("%s", err5)
+				}
+			}
+		}
+	}
+}
+}
+*/
+
+
+func MasterReceiveExploredStates(s State) []State{
 	var list []State = make([]State, 0,0)
+	var channelWithStates chan State = make(chan State, 50000)
+	ln, err := net.Listen("tcp", portNumbers1[2]) //port 5002
+	if err != nil {
+		fmt.Printf("Something went wrong: %s\n", err)
+	}
+	for i:=0;i<len(ipaddresses);i++ {
+		conn, err1 := ln.Accept()
+		if err1 != nil {
+			fmt.Printf("%s\n", err1)
+		}
+		go HelperMasterReceiveExploredState(conn, channelWithStates, s)
+	}
+	//point is we have to wait a bit, for states to be transmitted
+	//should be done by synchronization or something
+	time.Sleep(2*time.Second)
+	list = append(list, FromChannelToList(channelWithStates)...)
 
 	return list
 }
+func HelperMasterReceiveExploredState(conn net.Conn, channelWithStates chan State, s State){
+	var si StateInformation = StateInformation{}
+	var buff bytes.Buffer
+	for {
+		_, err := io.Copy(&buff, conn)
+		if err != nil{
+			fmt.Printf("%s", err)
+		}
+		err1 := json.Unmarshal(buff.Bytes(), &si)
+		if err1 != nil{
+			fmt.Printf("%s", err1)
+		}
+		s = s.ConfigureState(si)
+		channelWithStates <- s
+	}
+}
 
+func NodeSendExploredStates(passedList []State){
+	var si StateInformation = StateInformation{}
+	conn, err1 := net.Dial("tcp", ipaddresses[0]+portNumbers1[2]) //port 5002
+
+	if err1 != nil {
+		fmt.Printf("%s \n", err1)
+	}
+
+	for _,state := range passedList {
+		si = si.GetEssentialInformation(state)
+		jsonbytes, err := json.Marshal(si)
+		if (err != nil) {
+			fmt.Printf("Marshall error: %s\n", err)
+		}
+		_, err2 := conn.Write(jsonbytes)
+		if err2 != nil {
+			fmt.Printf("Error: %s\n", err2)
+		}
+	}
+	err := conn.Close()
+	if (err != nil) {
+		fmt.Printf("%s\n", err)
+	}
+	fmt.Println("Client done")
+}
+
+//
+/*---------------------Other stuff which won't actually be used, but used for testing---------------------------------*/
+//
 
 func Client() {
 	var template Template = MainSetupCounterModel()

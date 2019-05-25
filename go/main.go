@@ -26,7 +26,9 @@ func Node(){
 }
 
 func ExploreDistributed(initialState State) []State{
-	var channel chan State = make(chan State, 1000) //buffer size 1000.
+	var channel chan State = make(chan State, 1000) //buffer size 1000, used for transmitting states
+	var chanDonezo chan bool = make(chan bool)
+
 	var waitingList []State = make([]State, 0,0) //size zero, always, cause append fixes size by itself
 	var passedList []State = make([]State, 0,0)
 	var hashedStates map[string]string = make(map[string]string)
@@ -34,9 +36,10 @@ func ExploreDistributed(initialState State) []State{
 
 	if (selfNodeNumber != 0){ //this blocks non-master nodes from exploring, until they receive a state
 		initialState = <- channel
+		//go NodeSyncDone(chanDonezo) //run this, which talks to master periodically to see if we all done
 	}
 	//master starts the exploration
-	
+
 	hashedStates[initialState.ToString()] = initialState.ToString()
 	waitingList = append(waitingList, initialState)
 
@@ -109,20 +112,29 @@ func ExploreDistributed(initialState State) []State{
 		passedList = append(passedList, currentState)
 
 		//put all states received from other nodes in waitinglist
-		waitingList = append(waitingList, FromChannelToList(waitingList, channel)...)
+		tempList := FromChannelToList(channel)
+		for _, state := range tempList{
+			hashedStates[state.ToString()] = state.ToString()
+		}
+		waitingList = append(waitingList, tempList...)
 
 		if(len(waitingList) == 0){
-			time.Sleep(5*time.Second) //if empty we wait a bit, to see if other machines send some states that need exploration
+			time.Sleep(1*time.Second) //if empty we wait a bit, to see if other machines send some states that need exploration
 		}
-		waitingList = append(waitingList, FromChannelToList(waitingList, channel)...)
+		tempList1 := FromChannelToList(channel)
+		waitingList = append(waitingList, tempList1...)
 		//if waitingList still empty, we prolly done with exploring
 	}
 
 	//query all nodes for their passed list
 	//&& if all nodes respond positive
-	if (selfNodeNumber == 0){
+	if (selfNodeNumber == 0 /*&& <-chanDonezo*/){
 		//send signal to goroutine to
-		passedList = append(passedList, ReceiveExploredStates()...)
+		passedList = append(passedList, MasterReceiveExploredStates(initialState)...)
+	}
+	if (selfNodeNumber != 0){
+		//chanDonezo <- true //this should be redundant now?
+		NodeSendExploredStates(passedList)
 	}
 
 	return passedList

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"hash/fnv"
-	"time"
 )
 
 const MaxValue = 128
@@ -82,24 +81,15 @@ func removeLocation(a []*Location, i int) []*Location {
 
 	return a
 }
-func removeEl(a []string) []string {
-	for {
-		if (len(a) == 0) {
-			a[0] = a[len(a)-1] // Copy last element to index i.
-			a[len(a)-1] = ""   // Erase last element (write zero value).
-			a = a[:len(a)-1]   //truncate slice
-			time.Sleep(2*time.Second)
-		}
-	}
-	return a
-}
-func FromChannelToList(waitingList []State, channel chan State)[]State{
-	for {
+
+func FromChannelToList(channel chan State)[]State{
+	var tempList []State = make([]State,0,0)
+	for { //for loop that consumes everything from the buffed channel 'channel' and appends to waiting list, which is returned when channel is empty
 		select{
 		case state := <- channel:
-			waitingList = append(waitingList, state)
+			tempList = append(tempList, state)
 		default:
-			return waitingList
+			return tempList
 		}
 	}
 }

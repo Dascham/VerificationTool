@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
-	"time"
 )
 
 //this test should be the first test to call the function SetupTemplate(), otherwise it will fail
@@ -303,16 +302,6 @@ func TestConcurrentListAdd(t *testing.T){
 		default:
 			return
 		}
-	}
-}
-
-func TestConcurrentListLen(t *testing.T){
-	var slice []string = make([]string, 0,0)
-	slice = append(slice, "el1", "el2", "el3", "el4", "el5")
-	go removeEl(slice)
-	for i:=0;i<10;i++{
-		fmt.Println(slice)
-		time.Sleep(1*time.Second)
 	}
 }
 
