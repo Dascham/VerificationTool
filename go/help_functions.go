@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"hash/fnv"
+	"time"
 )
 
 const MaxValue = 128
@@ -80,6 +81,27 @@ func removeLocation(a []*Location, i int) []*Location {
 	a = a[:len(a)-1]   //truncate slice
 
 	return a
+}
+func removeEl(a []string) []string {
+	for {
+		if (len(a) == 0) {
+			a[0] = a[len(a)-1] // Copy last element to index i.
+			a[len(a)-1] = ""   // Erase last element (write zero value).
+			a = a[:len(a)-1]   //truncate slice
+			time.Sleep(2*time.Second)
+		}
+	}
+	return a
+}
+func FromChannelToList(waitingList []State, channel chan State)[]State{
+	for {
+		select{
+		case state := <- channel:
+			waitingList = append(waitingList, state)
+		default:
+			return waitingList
+		}
+	}
 }
 //
 //
@@ -216,6 +238,7 @@ func SetupCounterModel() Template{
 	return template
 }
 func EmptyState()State{
+
 	var s State = State{}
 	s.globalVariables = make(map[string]int)
 	s.allTemplates = make([]Template,0,0)

@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
+	"time"
 )
 
 //this test should be the first test to call the function SetupTemplate(), otherwise it will fail
@@ -287,6 +289,33 @@ func TestNetworkCommunication(t *testing.T){
 	//Server()
 	//fmt.Println("Everything Done")
 }
+
+func TestConcurrentListAdd(t *testing.T){
+	var channel chan string = make(chan string, 10)
+	for i:=0;i<10;i++{
+		channel <- "vip "+strconv.Itoa(i)
+	}
+	var slice []string = make([]string,0,0)
+	for {
+		select{
+		case string:= <- channel:
+			slice = append(slice, string)
+		default:
+			return
+		}
+	}
+}
+
+func TestConcurrentListLen(t *testing.T){
+	var slice []string = make([]string, 0,0)
+	slice = append(slice, "el1", "el2", "el3", "el4", "el5")
+	go removeEl(slice)
+	for i:=0;i<10;i++{
+		fmt.Println(slice)
+		time.Sleep(1*time.Second)
+	}
+}
+
 //in initializeNodes and getinitialized we convert a lot, test this
 func TestConversions(t *testing.T){
 

@@ -10,7 +10,7 @@ import (
 )
 //Ip addresses, master is always [0]
 var ipaddresses []string = []string{"127.0.0.1", "172.28.211.53"}
-var portNumbers1 []string = []string{":5000", ":5001"}
+var portNumbers1 []string = []string{":5000", ":5001", "5002"}
 var lenOfIpaddreses uint32 = uint32(len(ipaddresses))
 
 //StateInformation contains the information transmitted between nodes
@@ -34,7 +34,7 @@ func initializeNodes(ipaddresses []string) {
 		if (i == 0){
 			continue
 		} else {
-			conn, err := net.Dial("tcp", address+portNumbers1[1]) //1 is portnumber 5001
+			conn, err := net.Dial("tcp", address+portNumbers1[0]) //0 is portnumber 5000
 			if err != nil {
 				fmt.Printf("Something wrong when dialing, initializeNode,: %s\n", err)
 			}
@@ -50,7 +50,7 @@ func initializeNodes(ipaddresses []string) {
 	}
 }
 func GetInitialized(){
-	ln, err := net.Listen("tcp", portNumbers1[1]) //portnumbers1[1], is port 5001
+	ln, err := net.Listen("tcp", portNumbers1[0]) //portnumbers1[0], is port 5000
 	println("listening")
 	if err != nil {
 		fmt.Printf("Something went wrong: %s", err)
@@ -76,7 +76,7 @@ func GetInitialized(){
 	selfNodeNumber = num
 }
 
-func SendAState(s State, sendToNode int){
+func SendAState(s State, sendToNode uint32){
 	//get stateinformation
 	var si StateInformation = StateInformation{}
 	si = si.GetEssentialInformation(s)
@@ -86,10 +86,8 @@ func SendAState(s State, sendToNode int){
 		fmt.Println("ehhhhhhhhhhhhhhhhhhhhhhhhh")
 	}
 
-	//figure out who to send to
-	var lenOfIpaddresses uint32 = uint32(len(ipaddresses))
-	var nodeNumber uint32 = Hash(s.ToString())%lenOfIpaddresses
-	conn, err1 := net.Dial("tcp", ipaddresses[nodeNumber])
+	//send
+	conn, err1 := net.Dial("tcp", ipaddresses[sendToNode]+portNumbers1[1]) //5001
 
 	if err1 != nil{
 		fmt.Printf("Dial went wrong in SendState: %s", err1)
@@ -104,6 +102,56 @@ func SendAState(s State, sendToNode int){
 		fmt.Printf("Could not close connection: %s", err3)
 	}
 }
+func ReceiveStates(channel chan State, s State) {
+	ln, err := net.Listen("tcp", portNumbers1[1]) //5001
+	println("listening")
+	if err != nil {
+		fmt.Printf("Something went wrong")
+	}
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			fmt.Printf("Second layer of wrong")
+		}
+		go PutStateInChannel(conn, channel, s)
+	}
+}
+func PutStateInChannel(conn net.Conn, channel chan State, s State) {
+	//buffer := new(bytes.Buffer)
+	//var msg []byte = make([]byte, 500)
+	var buff bytes.Buffer
+	_, err := io.Copy(&buff, conn)
+	if err != nil{
+		fmt.Printf("handleconnection error, something: %s \n", err)
+		err1 := conn.Close()
+		if err1 != nil{
+			fmt.Printf("%s\n", err1)
+		}
+	}
+	var si StateInformation
+	err2 := json.Unmarshal(buff.Bytes(), &si)
+	if err2 != nil{
+		fmt.Printf( "%s\n",err2)
+	}
+	s = s.ConfigureState(si)
+
+	err3 := conn.Close()
+	if err3 != nil{
+		fmt.Printf("Could not close connection: %s", err3)
+	}
+	channel <- s //send state on channel 'channel'
+}
+
+func SendExploredStates(){
+
+}
+
+func ReceiveExploredStates() []State{
+	var list []State = make([]State, 0,0)
+
+	return list
+}
+
 
 func Client() {
 	var template Template = MainSetupCounterModel()

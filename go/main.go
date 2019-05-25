@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"time"
 )
 
 //IF A STRUCT IS TO BE MARSHALLED, ONE SHOULD "EXPORT" THE FIELDS/ATTRIBUTES OF THAT STRUCT
@@ -12,31 +12,33 @@ var selfNodeNumber int = 0
 
 
 func main(){
-	Master()
+
 }
 func Master(){
-	//set self to 0
 	selfNodeNumber = 0
 	//assign numbers to nodes
 	initializeNodes(ipaddresses)
-
-	//Run ReceiveState() concurrently with ExploreDistributed(), since ExploreDistributed will call SendAState, at some point
-
-	//explore, but also have to run another function, which receivesstates, and puts them in waiting list
-	//	1½	ExploreDistributed(SetupSimpleSyncModel())
+	ExploreDistributed(SetupSimpleSyncModel())
 }
 func Node(){
-	fmt.Println(selfNodeNumber)
 	GetInitialized()
-	fmt.Println(selfNodeNumber)
+	ExploreDistributed(SetupSimpleSyncModel())
 }
 
 func ExploreDistributed(initialState State) []State{
-	var hashedStates map[string]string = make(map[string]string)
-	hashedStates[initialState.ToString()] = initialState.ToString()
+	var channel chan State = make(chan State, 1000) //buffer size 1000.
 	var waitingList []State = make([]State, 0,0) //size zero, always, cause append fixes size by itself
-	waitingList = append(waitingList, initialState)
 	var passedList []State = make([]State, 0,0)
+	var hashedStates map[string]string = make(map[string]string)
+	go ReceiveStates(channel, DeepCopyState(initialState)) //this concurrently receives states from the network, and puts them in a buffered channel
+
+	if (selfNodeNumber != 0){ //this blocks non-master nodes from exploring, until they receive a state
+		initialState = <- channel
+	}
+	//master starts the exploration
+	
+	hashedStates[initialState.ToString()] = initialState.ToString()
+	waitingList = append(waitingList, initialState)
 
 	for len(waitingList) > 0 { //exploration loop
 		var currentState = waitingList[0]
@@ -67,10 +69,11 @@ func ExploreDistributed(initialState State) []State{
 								}
 								//add state to waitinglist, add only if map is valid
 								if (ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(newState.globalVariables)){
-									if (Hash(newState.ToString())%lenOfIpaddreses == uint32(selfNodeNumber)){
+									num := Hash(newState.ToString())
+									if (num%lenOfIpaddreses == uint32(selfNodeNumber)){
 										waitingList = append(waitingList, newState)
 									}else{
-										//SendState(newState)
+										SendAState(newState, num)
 									}
 
 								}
@@ -104,7 +107,24 @@ func ExploreDistributed(initialState State) []State{
 		}
 		//now we have tried everything that is possible for this state, therefore add to passed list
 		passedList = append(passedList, currentState)
+
+		//put all states received from other nodes in waitinglist
+		waitingList = append(waitingList, FromChannelToList(waitingList, channel)...)
+
+		if(len(waitingList) == 0){
+			time.Sleep(5*time.Second) //if empty we wait a bit, to see if other machines send some states that need exploration
+		}
+		waitingList = append(waitingList, FromChannelToList(waitingList, channel)...)
+		//if waitingList still empty, we prolly done with exploring
 	}
+
+	//query all nodes for their passed list
+	//&& if all nodes respond positive
+	if (selfNodeNumber == 0){
+		//send signal to goroutine to
+		passedList = append(passedList, ReceiveExploredStates()...)
+	}
+
 	return passedList
 }
 
