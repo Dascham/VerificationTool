@@ -30,7 +30,7 @@ func (si StateInformation) GetEssentialInformation(s State) StateInformation{
 	return si
 }
 func initializeNodes(ipaddresses []string) {
-	conn, err := net.Dial("tcp", "127.28.211.53:5001") //1 is portnumber 5001
+	conn, err := net.Dial("tcp", "127.28.211.53:5000") //1 is portnumber 5001
 	if err != nil {
 		fmt.Printf("Something wrong when dialing, initializeNode,: %s\n", err)
 	}
@@ -44,7 +44,7 @@ func initializeNodes(ipaddresses []string) {
 	}
 }
 func GetInitialized(){
-	ln, err := net.Listen("tcp", ":5001")
+	ln, err := net.Listen("tcp", ":5000")
 	println("listening")
 	if err != nil {
 		fmt.Printf("Something went wrong: %s", err)
@@ -63,12 +63,10 @@ func GetInitialized(){
 	if err3 != nil{
 		fmt.Printf("could not convert: %s", err3)
 	}
-
 	err4 := conn.Close()
 	if err4 != nil{
 		fmt.Printf("Could not close connection: %s", err4)
 	}
-
 	selfNodeNumber = num
 }
 
@@ -101,10 +99,6 @@ func SendAState(s State, sendToNode int){
 	}
 }
 
-
-
-
-
 func Client() {
 	var template Template = MainSetupCounterModel()
 	var s State = State{}
@@ -119,7 +113,7 @@ func Client() {
 	if (err != nil) {
 		fmt.Printf("Marshall error: %s\n", err)
 	}
-	conn, err1 := net.Dial("tcp", "127.0.0.1:5000")
+	conn, err1 := net.Dial("tcp", "172.28.211.53:5000")
 	fmt.Println("Dialed")
 	if err1 != nil {
 		fmt.Printf("Something went wrong %s \n", err)
