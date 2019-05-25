@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 //Ip addresses, master is always [0]
-var ipaddresses []string = []string{"127.0.0.1:", "127.0.0.2:"}
+var ipaddresses []string = []string{"127.0.0.1:", "127.28.211.53:"}
 var portNumbers1 []string = []string{"5000", "5001"}
 var lenOfIpaddreses uint32 = uint32(len(ipaddresses))
 
@@ -30,20 +30,13 @@ func (si StateInformation) GetEssentialInformation(s State) StateInformation{
 	return si
 }
 func initializeNodes(ipaddresses []string) {
-	for i, address := range ipaddresses{
-		if (i == 0) {
-			//skip 0, cause that is the master
-			continue
-		} else{
-			conn, err := net.Dial("tcp", address+portNumbers1[1]) //1 is portnumber 5001
-			if err != nil{
-				fmt.Printf("Something wrong when dialing, initializeNode,: %s", err)
-			}
-			_, err1 := conn.Write([]byte(strconv.Itoa(i)))
-			if err1 != nil{
-				fmt.Printf("Something wrong when trying to conn.write: %s\n", err1)
-			}
-		}
+	conn, err := net.Dial("tcp", "127.28.211.53:5001") //1 is portnumber 5001
+	if err != nil {
+		fmt.Printf("Something wrong when dialing, initializeNode,: %s\n", err)
+	}
+	_, err1 := conn.Write([]byte(strconv.Itoa(1)))
+	if err1 != nil {
+		fmt.Printf("Something wrong when trying to conn.write: %s\n", err1)
 	}
 }
 func GetInitialized(){

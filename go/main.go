@@ -10,7 +10,7 @@ var selfNodeNumber int = 0
 
 
 func main(){
-
+	Master()
 }
 func Master(){
 	//set self to 0
