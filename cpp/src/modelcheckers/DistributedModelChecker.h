@@ -242,7 +242,9 @@ namespace modelcheckers {
 
                 // Loop through SocketThreads and take their state queue
                 for (auto &socketThread : socketThreads) {
-                    addStateQueue(socketThread.stealQueue());
+                    socketThread.stealQueue(stateQueue);
+                    //addStateQueue(socketThread.stealQueue());
+
 
                     if (!stateQueue.empty()) {
                         didWork = true;
@@ -318,14 +320,15 @@ namespace modelcheckers {
                                     while(!socketThread.flag);
                                     //printf("\t\t\tSocketThread iteration confirmed!\n");
 
-                                    auto queue = socketThread.stealQueue();
+                                    //auto queue = socketThread.stealQueue(std::queue<State>());
+                                    socketThread.stealQueue(stateQueue);
 
-                                    if (!queue.empty()) {
+                                    if (!stateQueue.empty()) {
                                         printf("\tResponding NotDone(%u) to master!\n", masterPacket.data);
                                         WorkerPacket response{WorkerPacket::Type::NotDone, masterPacket.data};
                                         sendWorkerPacket(response);
 
-                                        addStateQueue(queue);
+                                        //addStateQueue(queue);
 
                                         goto continue_running;
                                     }

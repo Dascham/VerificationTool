@@ -110,12 +110,13 @@ private:
 
 public:
     // Used to hand over the queue to the worker thread
-    std::queue<State> &&stealQueue() {
+    /*std::queue<State> &&*/ void stealQueue(std::queue<State> &stateQueue) {
         std::unique_lock lock{mutex};
+        std::swap(queue, stateQueue);
         //auto stolenQueue = std::move(queue);
         //queue = {};
         //return std::move(stolenQueue);
-        return std::move(queue);
+        //return std::move(queue);
     }
 
     void join() {
