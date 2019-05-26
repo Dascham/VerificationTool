@@ -8,6 +8,7 @@ type Location struct{
 	LocationId int
 	Edges []Edge //should be made into slice
 	Invariant Invariant
+	BlockId int
 }
 
 func (l Location) AcceptOutGoingEdges(args ...Edge) Location{

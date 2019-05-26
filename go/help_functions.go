@@ -311,6 +311,112 @@ func MainSetupCounterModel() Template{
 	location0 = location0.AcceptOutGoingEdges(edge)
 	return template
 }
+//v_i == a,
+func SetupTestModel1()Template{
+	var guard0 Guard = Guard{"a", ">", 2, ""}
+	var guard1 Guard = Guard{"a", "<", 16, ""}
+	var guard2 Guard = Guard{"a", ">", 5, ""}
+
+	var update0 Update = Update{"a", "+=", 3, ""}
+	var update1 Update = Update{"a", "+=", 2, ""}
+	var update2 Update = Update{"a", "--", 1, ""}
+	var update3 Update = Update{"a", "++", 1, ""}
+	var update4 Update = Update{"a", "-=", 3, ""}
+
+	var location0 Location = NewLocation("L0", Invariant{})
+	location0.BlockId = 0
+	var location1 Location = NewLocation("L1", Invariant{})
+	location1.BlockId = 1
+	var location2 Location = NewLocation("L2", Invariant{})
+	location2.BlockId = 2
+	var location3 Location = NewLocation("L3", Invariant{})
+	location3.BlockId = 3
+	var location4 Location = NewLocation("L4", Invariant{})
+	location4.BlockId = 4
+	var location5 Location = NewLocation("L5", Invariant{})
+	location5.BlockId = 4
+	var location6 Location = NewLocation("L6", Invariant{})
+	location6.BlockId = 5
+
+	//0,1
+	var edge01 Edge = Edge{}
+	edge01 = edge01.InitializeEdge()
+	edge01 = edge01.AcceptGuards(guard0)
+	edge01 = edge01.AssignSrcDst(&location0, &location1)
+
+	//0,3
+	var edge03 Edge = Edge{}
+	edge03 = edge03.InitializeEdge()
+	edge03 = edge03.AcceptGuards(guard1)
+	edge03 = edge03.AssignSrcDst(&location0, &location3)
+
+	//1,2
+	var edge12 Edge = Edge{}
+	edge12 = edge12.InitializeEdge()
+	edge12 = edge12.AcceptUpdates(update2)
+	edge12 = edge12.AssignSrcDst(&location1, &location2)
+
+	//1,3
+	var edge13 Edge = Edge{}
+	edge13 = edge13.InitializeEdge()
+	edge13 = edge13.AcceptGuards(guard1)
+	edge13 = edge13.AcceptUpdates(update0)
+	edge13 = edge13.AssignSrcDst(&location1, &location3)
+
+	//2,4
+	var edge24 Edge = Edge{}
+	edge24 = edge24.InitializeEdge()
+	edge24 = edge24.AssignSrcDst(&location2, &location4)
+
+	//3,4
+	var edge34 Edge = Edge{}
+	edge34 = edge34.InitializeEdge()
+	edge34 = edge34.AssignSrcDst(&location3, &location4)
+
+	//3,5
+	var edge35 Edge = Edge{}
+	edge35 = edge35.InitializeEdge()
+	edge35 = edge35.AcceptUpdates(update1)
+	edge35 = edge35.AssignSrcDst(&location3, &location5)
+	//4,5
+	var edge45 Edge = Edge{}
+	edge45 = edge45.InitializeEdge()
+	edge45 = edge45.AssignSrcDst(&location4, &location5)
+
+	//5,6
+	var edge56 Edge = Edge{}
+	edge56 = edge56.InitializeEdge()
+	edge56 = edge56.AcceptGuards(guard1)
+	edge56 = edge56.AssignSrcDst(&location5, &location6)
+
+	//5,0
+	var edge50 Edge = Edge{}
+	edge50 = edge50.InitializeEdge()
+	edge50 = edge50.AcceptGuards(guard2)
+	edge50 = edge50.AcceptUpdates(update4)
+	edge50 = edge50.AssignSrcDst(&location5, &location0)
+
+	//6,0
+	var edge60 Edge = Edge{}
+	edge60 = edge60.InitializeEdge()
+	edge60 = edge60.AcceptUpdates(update3)
+	edge60 = edge60.AssignSrcDst(&location6, &location0)
+
+	location0 = location0.AcceptOutGoingEdges(edge01, edge03)
+	location1 = location1.AcceptOutGoingEdges(edge12, edge13)
+	location2 = location2.AcceptOutGoingEdges(edge24)
+	location3 = location3.AcceptOutGoingEdges(edge34, edge35)
+	location4 = location4.AcceptOutGoingEdges(edge45)
+	location5 = location5.AcceptOutGoingEdges(edge56, edge50)
+	location6 = location6.AcceptOutGoingEdges(edge60)
+
+	var t Template = Template{}
+	t.InitialLocation = &location0
+	t.currentLocation = &location0
+	t.LocalVariables = map[string]int{"a":0}
+	return t
+}
+
 //
 //
 //
@@ -346,3 +452,5 @@ func SetupInvalidMap() map[string]int {
 	localVariables["d"] = 135
 	return localVariables
 }
+
+

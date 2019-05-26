@@ -326,9 +326,18 @@ func TestBuffer(t *testing.T){
 	buff.Write(jsonbytes)
 
 	si1 := StateInformation{}
-	json.Unmarshal(buff.Bytes(), &si1)
+	//json.Unmarshal(buff.ReadBytes([]byte(io.EOF)), &si1)
 
 	fmt.Println(si1.GlobalVariables)
+}
 
+func TestExplore3(t *testing.T) {
+	s := EmptyState()
+	s.globalVariables = make(map[string]int)
+	s.allTemplates = append(s.allTemplates, SetupTestModel1(), SetupTestModel1(), SetupTestModel1())
+	list := Explore(s)
+	print("Number of states explored: ")
+	println(len(list))
+	//PrintStates(list)
 }
 
