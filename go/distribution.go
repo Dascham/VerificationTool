@@ -115,11 +115,11 @@ func ReceiveStates(channel chan State, s State) {
 		if err != nil {
 			fmt.Printf("Second layer of wrong")
 		}
-		go HelperPutStateInChannel(conn, channel, s)
+		go HelpPutStateInChannel(conn, channel, s)
 	}
 }
 //helper function for ReceiveStates
-func HelperPutStateInChannel(conn net.Conn, channel chan State, s State) {
+func HelpPutStateInChannel(conn net.Conn, channel chan State, s State) {
 	//buffer := new(bytes.Buffer)
 	//var msg []byte = make([]byte, 500)
 	var buff bytes.Buffer
@@ -251,6 +251,7 @@ func HelperMasterReceiveExploredState(conn net.Conn, channelWithStates chan Stat
 		if err != nil{
 			fmt.Printf("%s", err)
 		}
+
 		err1 := json.Unmarshal(buff.Bytes(), &si)
 		if err1 != nil{
 			fmt.Printf("%s", err1)

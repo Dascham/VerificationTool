@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -307,6 +308,27 @@ func TestConcurrentListAdd(t *testing.T){
 
 //in initializeNodes and getinitialized we convert a lot, test this
 func TestConversions(t *testing.T){
+
+}
+
+//test buffer writing and &si
+func TestBuffer(t *testing.T){
+	s := SetupSimpleSyncModel()
+	s.globalVariables = SetupMap3()
+	var si StateInformation = StateInformation{}
+	si = si.GetEssentialInformation(s)
+	jsonbytes,_ := json.Marshal(si)
+
+	var buff bytes.Buffer
+
+	//single write is okay, but double is bad
+	buff.Write(jsonbytes)
+	buff.Write(jsonbytes)
+
+	si1 := StateInformation{}
+	json.Unmarshal(buff.Bytes(), &si1)
+
+	fmt.Println(si1.GlobalVariables)
 
 }
 

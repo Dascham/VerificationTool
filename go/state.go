@@ -34,12 +34,12 @@ func (s State) ConfigureState(si StateInformation) State{
 	s.globalVariables = CopyMap(si.GlobalVariables)
 	for i, tempMap := range si.ListLocalVariables{
 		s.allTemplates[i].LocalVariables = CopyMap(tempMap)
-		s.allTemplates[i].currentLocation = configLocation(s.allTemplates[i], si.CurrentLocationIds[i])
+		s.allTemplates[i].currentLocation = helperConfigLocation(s.allTemplates[i], si.CurrentLocationIds[i])
 	}
 
 	return s
 }
-func configLocation(t Template, locationid int) *Location{
+func helperConfigLocation(t Template, locationid int) *Location{
 	var correctLocation *Location
 	var locations []*Location = make([]*Location, 0,0)
 	locations = append(locations, t.InitialLocation)
