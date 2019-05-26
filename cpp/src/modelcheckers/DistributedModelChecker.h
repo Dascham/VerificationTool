@@ -22,8 +22,9 @@ namespace modelcheckers {
     // This class is intended to be the worker of the modelchecker. It depends on a master to coordinate.
     class DistributedModelChecker : public BaseModelChecker {
     private:
-        std::vector<SocketThread> socketThreads{WORKER_COUNT - 1};
-        std::vector<kn::tcp_socket> outgoingSockets{WORKER_COUNT};
+        std::array<SocketThread, WORKER_COUNT-1> socketThreads;
+        std::array<kn::tcp_socket, WORKER_COUNT> outgoingSockets;
+        std::array<size_t, WORKER_COUNT> pendingAcks = {};
 
         kn::tcp_socket masterSocket{kn::endpoint{localhost, MASTER_PORT}};
 
@@ -33,7 +34,9 @@ namespace modelcheckers {
 
         MasterPacket receiveMasterPacket() {
             kn::buffer<2> buffer;
-            auto packet = masterSocket.recv(buffer);
+            auto [size, status] = masterSocket.recv(buffer);
+
+            assert(size == 2);
 
             MasterPacket masterPacket{(MasterPacket::Type)buffer[0], (uint8_t)buffer[1]};
             return masterPacket;
@@ -47,7 +50,43 @@ namespace modelcheckers {
             masterSocket.send(buffer);
         }
 
-        void sendState(State state, kn::tcp_socket &socket) {
+        size_t consumePendingAcks(size_t otherID) {
+            if (otherID == workerID) {
+                assert(pendingAcks[otherID] == 0);
+                return 0;
+            }
+
+            kn::tcp_socket &socket{outgoingSockets[otherID]};
+
+            assert(socket.is_valid());
+
+            while (socket.bytes_available() > 0) {
+                kn::buffer<1> buffer;
+                const auto[data_size, status_code] = socket.recv(buffer);
+
+                for (int i = 0; i < data_size; ++i) {
+                    printf("!!!%zx %x\n", static_cast<size_t>(buffer[i]), 0x42);
+                    assert(buffer[i] == static_cast<std::byte>(0x42));
+                }
+
+                assert(data_size <= pendingAcks[otherID]);
+                pendingAcks[otherID] -= data_size;
+            }
+
+            return pendingAcks[otherID];
+        }
+
+        void sendState(State state, kn::port_t otherID) {
+            // Don't send to self using socket
+            if (otherID == workerID) {
+                addNewState(state);
+                std::cout << "Kept: " << state << std::endl;
+                return;
+            }
+
+            kn::tcp_socket &socket{outgoingSockets[otherID]};
+            pendingAcks[otherID]++;
+
             assert(state.locations.size() == MODEL_AUTOMATA);
             assert(state.variables.size() == MODEL_VARIABLES);
 
@@ -64,22 +103,43 @@ namespace modelcheckers {
 
             socket.send(locationBuffer);
             socket.send(variableBuffer);
+
+            std::cout << "Sent: " << state << std::endl;
+
+            consumePendingAcks(otherID);
         }
 
     protected:
+        void
+        handleNewState(const State &newState, const State &oldState, std::vector<size_t> changedLocations) override {
+            if constexpr (!USE_HERD_HASHING) {
+                // If we don't care about herds, then we simply hash and send
+                sendState(newState, std::hash<State>{}(newState) % WORKER_COUNT);
+                return;
+            }
+
+            bool shouldHash = false;
+            for (const auto &loc : changedLocations) {
+                // TODO: get old-/new-Group
+                if (oldState.locations[loc]/*TODO: is cover*/ || oldState.locations[loc] != newState.locations[loc]/*TODO: the herd of old/new*/) {
+                    shouldHash = true;
+                    break;
+                }
+            }
+
+            if (shouldHash) {
+                sendState(newState, std::hash<State>{}(newState) % WORKER_COUNT);
+            } else { // Keep the state locally
+                addNewState(newState);
+            }
+
+        }
 
         void addStateQueue(std::queue<State> newQueue) {
             while (!newQueue.empty()) {
                 addNewState(newQueue.front());
                 newQueue.pop();
             }
-        }
-
-        bool addNewState(const State &state) override {
-
-            //if shouldHashLocal(state); need old state? TODO: continue implementing
-
-            return BaseModelChecker::addNewState(state);
         }
 
         void exploreStateQueue() {
@@ -100,6 +160,7 @@ namespace modelcheckers {
 
             printf("Starting to listen for incoming worker connections.\n\n");
             std::thread incomingThread{[this]() {
+                printf("--incomingThread\n");
                 auto sin1 = kn::tcp_socket{
                         kn::endpoint{"0.0.0.0", static_cast<kn::port_t>(WORKER_PORT_FIRST + workerID)}};
 
@@ -112,9 +173,15 @@ namespace modelcheckers {
                     exit(1);
                 }
 
+                printf("--Ready to accept incoming sockets! (%s:%u)\n", sin1.get_bind_loc().address.c_str() ,sin1.get_bind_loc().port);
                 for (size_t i = 0; i < WORKER_COUNT - 1; ++i) {
-                    socketThreads[i].assignSocket(sin1.accept());
-                    printf("--%zu/%zu workers connected...\n", i + 1, WORKER_COUNT - 1);
+                    printf("--i: %zu\n", i);
+                    auto sock = sin1.accept();
+                    printf("--accepted: %zu\n", i);
+                    printf("--%zu/%zu workers connected... (%s:%u)\n", i + 1, WORKER_COUNT - 1,
+                           sock.get_bind_loc().address.c_str(), sock.get_bind_loc().port);
+
+                    socketThreads[i].assignSocket(std::move(sock));
                 }
 
                 printf("--All workers connected!\n");
@@ -130,18 +197,29 @@ namespace modelcheckers {
             printf("Connecting to other workers...\n");
             for (size_t i = 0; i < WORKER_COUNT; ++i) {
                 if (i == workerID) {
-                    printf("Skipping own port, socket %zu/%zu.\n", i + 1,
-                           WORKER_COUNT); // TODO: explicit check to avoid sending to self(and crashing?)
+                    printf("Skipping own port, socket %zu/%zu.\n", i + 1, WORKER_COUNT);
                     continue;
                 }
 
                 outgoingSockets[i] = kn::tcp_socket{kn::endpoint{localhost, kn::port_t(WORKER_PORT_FIRST + i)}};
-                if (outgoingSockets[i].is_valid()) {
-                    printf("Connected to workers %zu/%zu.\n", i + 1, WORKER_COUNT);
-                } else {
-                    fprintf(stderr, "Error connecting to worker id %zu!\n", i);
-                    exit(1);
+                for (size_t j = 1; /*j <= 3*/; ++j) {
+                    const auto &sock = outgoingSockets[i];
+                    sock.set_non_blocking(true);
+
+                    printf("Connecting to worker %zu, attempt %zu. (%s:%u)\n", i, j,
+                           sock.get_bind_loc().address.c_str(), sock.get_bind_loc().port);
+
+                    if (outgoingSockets[i].connect()) {
+                        printf("Connected to workers %zu/%zu. (%s:%u)\n", i + 1, WORKER_COUNT,
+                               sock.get_bind_loc().address.c_str(), sock.get_bind_loc().port);
+                        break;
+                    } else if (j == 3) {
+                        fprintf(stderr, "Error connecting to worker id %zu!\n", i);
+                        exit(1);
+                    }
                 }
+
+
             }
             printf("All outgoing sockets connected!\n\n");
 
@@ -155,10 +233,12 @@ namespace modelcheckers {
             uint8_t doneID = std::numeric_limits<uint8_t>::max();
 
             while (running) {
-
                 bool didWork = false;
 
-                if (!stateQueue.empty()) exploreStateQueue();
+                if (!stateQueue.empty()) {
+                    didWork = true;
+                    exploreStateQueue();
+                }
 
                 // Loop through SocketThreads and take their state queue
                 for (auto &socketThread : socketThreads) {
@@ -174,15 +254,11 @@ namespace modelcheckers {
                     doneState = DoneState::NotDone;
                 }
 
-                //bool justDone = false;
-
-                /*for (int i = 0; i < 3; ++i)*/if (masterSocket.bytes_available() < 2) std::this_thread::sleep_for(.1s); else { // TODO: while master has bytes?
-                    // TODO: actually read from master(respond to is(still)done)
-
-                    //kn::buffer<2> buffer;
-                    //auto packet = masterSocket.recv(buffer);
+                /*for (int i = 0; i < 3; ++i)*/  /*if (masterSocket.bytes_available() < 2) std::this_thread::sleep_for(.1s); else*/
+                if (masterSocket.bytes_available() >= 2) {
 
                     MasterPacket masterPacket = receiveMasterPacket();//{MasterPacket::Type::Terminate, 0};
+
                     switch (masterPacket.type) {
                         case MasterPacket::Type::InitialState:
                             printf(">Initial State:\n"
@@ -191,28 +267,57 @@ namespace modelcheckers {
                             goto continue_running;
                         case MasterPacket::Type::IsDone:
                             printf(">IsDone?:\n");
-                            if (!didWork) {
-                                printf("\tResponding FirstDone(%u) to master!\n", masterPacket.data);
-                                doneState = DoneState::FirstDone;
-                                doneID = masterPacket.data;
+                            {
+                                if (!didWork) {
 
-                                WorkerPacket response{WorkerPacket::Type::FirstDone, masterPacket.data};
-                                sendWorkerPacket(response);
-                            } else {
+                                    // Check if we still have any pending acks for states first
+                                    bool stillPendingAcks = false;
+                                    for (size_t i = 0; i < WORKER_COUNT; ++i) {
+                                        if (consumePendingAcks(i) > 0) {
+                                            stillPendingAcks = true;
+                                            //printf("Pending %zu: %zu\n", i, pendingAcks[i]);
+                                            std::this_thread::sleep_for(100ms);
+                                            break;
+                                        }
+                                    }
+
+                                    if (!stillPendingAcks) {
+                                        printf("\tResponding FirstDone(%u) to master!\n", masterPacket.data);
+                                        doneState = DoneState::FirstDone;
+                                        doneID = masterPacket.data;
+
+                                        WorkerPacket response{WorkerPacket::Type::FirstDone, doneID};
+                                        sendWorkerPacket(response);
+                                        goto continue_running;
+                                    }
+                                }
+
+
                                 printf("\tResponding NotDone(%u) at IsDone to master!\n", masterPacket.data);
                                 WorkerPacket response{WorkerPacket::Type::NotDone, masterPacket.data};
                                 sendWorkerPacket(response);
+
                             }
                             goto continue_running;
                         case MasterPacket::Type::IsStillDone:
                             printf(">IsStillDone?:\n");
-                            if (doneState != DoneState::FirstDone) {
+                            if (doneState != DoneState::FirstDone || doneID != masterPacket.data) {
+                                doneState = DoneState::NotDone;
+
                                 printf("\tResponding NotDone(%u) to master!\n", masterPacket.data);
                                 WorkerPacket response{WorkerPacket::Type::NotDone, masterPacket.data};
                                 sendWorkerPacket(response);
                             } else {
+
+                                //std::this_thread::sleep_for(5000ms);
                                 printf("\tChecking SocketThread queues one last time...\n");
                                 for (auto &socketThread : socketThreads) {
+
+                                    //printf("\t\tWait for one SocketThread iteration...\n");
+                                    socketThread.flag = false;
+                                    while(!socketThread.flag);
+                                    //printf("\t\t\tSocketThread iteration confirmed!\n");
+
                                     auto queue = socketThread.stealQueue();
 
                                     if (!queue.empty()) {
@@ -253,7 +358,7 @@ namespace modelcheckers {
                                 goto finish_running;
                             }
                         default:
-                            fprintf(stderr, ">Invalid packet from master (%u)", (uint8_t) masterPacket.type);
+                            fprintf(stderr, ">Invalid packet from master (%u)\n", (uint8_t) masterPacket.type);
                             exit(1);
                     }
                 }
@@ -265,7 +370,7 @@ namespace modelcheckers {
 
             printf("Joining all SocketThreads...\n");
             for (size_t i = 0; i < socketThreads.size(); ++i) {
-                printf("Trying to join SocketThread %zu...", i);
+                printf("Trying to join SocketThread %zu...\n", i);
                 socketThreads[i].join();
             }
 

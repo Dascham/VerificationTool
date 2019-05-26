@@ -42,14 +42,18 @@ class Master {
 
         while (respCount < WORKER_COUNT) {
             for (size_t j = 0; j < WORKER_COUNT; ++j) {
-
                 if (respArray[j]) continue; // If we already received a response
-
+                
+                if (connections[j].bytes_available() < 2) continue; // Only receive if we have enough bytes available
+                
                 WorkerPacket response = receivePacket(j); //{WorkerPacket::Type::FirstDone, i};
 
-                if (response.data != i) continue; // We are only looking for responses to the current question
+                if (response.data != i) { // We are only looking for responses to the current question
+                    printf("Worker %zu responded %u to %u", j, response.data, i);
+                    continue;
+                }
 
-                j = true;
+                respArray[j] = true;
                 ++respCount;
 
                 if (response.type == WorkerPacket::Type::NotDone) {
@@ -59,6 +63,12 @@ class Master {
                             (uint8_t) ExpectedAnswer, (uint8_t) response.type);
                     exit(1);
                 }
+                
+                printf("resp(%zu) state: ", respCount);
+                for (int k = 0; k < WORKER_COUNT; ++k) {
+                    printf("%d ", respArray[k]);
+                }
+                printf("\n");
             }
         }
 

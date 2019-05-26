@@ -41,5 +41,5 @@ add_executable(worker
         )
 target_link_libraries(worker Threads::Threads)
 
-add_custom_target(distributed_master_worker)
-add_dependencies(distributed_master_worker master worker)
+add_custom_target(distributed_both)
+add_dependencies(distributed_both master worker)

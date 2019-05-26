@@ -26,7 +26,8 @@ namespace modelcheckers {
             std::queue<State> stateQueue{};
             std::unordered_set<State> encounteredStates{};
 
-            virtual bool addNewState(const State &state);
+            bool addNewState(const State &state);
+            virtual void handleNewState(const State &newState, const State &oldState, std::vector<size_t> changedLocations);
             bool checkInvariants(const State &state);
             void generateSuccessors(const State &state);
 
