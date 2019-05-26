@@ -278,7 +278,7 @@ namespace modelcheckers {
                                         if (consumePendingAcks(i) > 0) {
                                             stillPendingAcks = true;
                                             //printf("Pending %zu: %zu\n", i, pendingAcks[i]);
-                                            std::this_thread::sleep_for(100ms);
+                                            //std::this_thread::sleep_for(100ms);
                                             break;
                                         }
                                     }
@@ -317,7 +317,7 @@ namespace modelcheckers {
 
                                     //printf("\t\tWait for one SocketThread iteration...\n");
                                     socketThread.flag = false;
-                                    while(!socketThread.flag);
+                                    while(!socketThread.flag) std::this_thread::yield(); // Wait for one iteration of the SocketThread loop
                                     //printf("\t\t\tSocketThread iteration confirmed!\n");
 
                                     //auto queue = socketThread.stealQueue(std::queue<State>());
