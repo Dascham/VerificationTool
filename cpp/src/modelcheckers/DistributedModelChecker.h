@@ -10,7 +10,7 @@
 #include <kissnet.hpp>
 
 #include "Packet.h"
-#include "Group.h"
+#include "Block.h"
 #include "SocketThread.h"
 
 #include "config.h"
@@ -386,7 +386,7 @@ namespace modelcheckers {
         }
 
 
-        explicit DistributedModelChecker(size_t workerID, model::Model model, Herd herd = {})
+        explicit DistributedModelChecker(size_t workerID, model::Model model, Herd herd = {{}})
                 : workerID{workerID}, BaseModelChecker{std::move(model)}, herd{std::move(herd)} {}
     };
 

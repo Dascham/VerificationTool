@@ -7,7 +7,7 @@
 
 #include "util.h"
 #include "State.h"
-#include "Group.h"
+#include "Block.h"
 #include "model/Model.h"
 
 namespace modelcheckers {

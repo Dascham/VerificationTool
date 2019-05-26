@@ -1,5 +1,5 @@
-#ifndef CPP_GROUP_H
-#define CPP_GROUP_H
+#ifndef CPP_BLOCK_H
+#define CPP_BLOCK_H
 
 
 #include <vector>
@@ -12,9 +12,9 @@ struct Block {
     };
 
     Type type;
-    size_t groupID;
+    size_t blockID;
 
-    Block(size_t groupID, Type type = Type::Block) : groupID{groupID}, type{type} {} // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+    Block(size_t blockID, Type type = Type::Block) : blockID{blockID}, type{type} {} // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
 };
 
 bool operator==(const Block &a, const Block &b);
@@ -29,4 +29,4 @@ struct Herd {
     std::vector<Block> groups;
 };
 
-#endif //CPP_GROUP_H
+#endif //CPP_BLOCK_H
