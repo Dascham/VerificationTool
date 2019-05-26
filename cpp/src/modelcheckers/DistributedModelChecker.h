@@ -7,7 +7,26 @@
 #include <thread>
 #include <chrono>
 
+// TODO: does this work on linux too?
+#define AI_ADDRCONFIG LUP_ADDRCONFIG
+const char* inet_ntop(int af, const void* src, char* dst, int cnt);
+#undef NOMINMAX
 #include <kissnet.hpp>
+const char* inet_ntop(int af, const void* src, char* dst, int cnt){
+
+    struct sockaddr_in srcaddr;
+
+    memset(&srcaddr, 0, sizeof(struct sockaddr_in));
+    memcpy(&(srcaddr.sin_addr), src, sizeof(srcaddr.sin_addr));
+
+    srcaddr.sin_family = af;
+    if (WSAAddressToString((struct sockaddr*) &srcaddr, sizeof(struct sockaddr_in), 0, dst, (LPDWORD) &cnt) != 0) {
+        DWORD rv = WSAGetLastError();
+        printf("WSAAddressToString() : %d\n",rv);
+        return NULL;
+    }
+    return dst;
+}
 
 #include "Packet.h"
 #include "Block.h"

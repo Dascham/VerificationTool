@@ -41,7 +41,7 @@ add_executable(worker
         src/modelcheckers/BaseModelChecker.cpp
         src/Block.cpp
         )
-target_link_libraries(worker Threads::Threads)
+target_link_libraries(worker Threads::Threads ws2_32)
 
 add_custom_target(distributed_both)
 add_dependencies(distributed_both master worker)
