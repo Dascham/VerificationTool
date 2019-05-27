@@ -38,7 +38,7 @@ func Node(){
 }
 
 func ExploreDistributed(initialState State) []State{
-	var channel chan State = make(chan State, 1000) //buffer size 1000, used for transmitting states
+	var channel chan State = make(chan State, 10.000) //buffer size 10.000, used for transmitting states
 	//var chanDonezo chan bool = make(chan bool)
 
 	var waitingList []State = make([]State, 0,0) //size zero, always, cause append fixes size by itself
