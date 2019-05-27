@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -43,7 +44,7 @@ func ExploreDistributed(initialState State) []State{
 	var hashedStates map[string]string = make(map[string]string)
 
 	go ReceiveStates(channel, DeepCopyState(initialState)) //this concurrently receives states from the network, and puts them in a buffered channel
-
+	fmt.Println("The initialstate: %s", initialState.ToString())
 	if (selfNodeNumber != 0){ //this blocks non-master nodes from exploring, until they receive a state
 		initialState = <- channel
 

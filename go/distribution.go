@@ -104,6 +104,7 @@ func SendAState(s State, sendToNode uint32){
 		fmt.Printf("Could not close connection: %s", err3)
 	}
 }
+
 //was 'ReceiveAState', master and node run this function, always
 func ReceiveStates(channel chan State, s State) {
 	ln, err := net.Listen("tcp", portNumbers1[1]) //5001
@@ -148,6 +149,7 @@ func HelpPutStateInChannel(conn net.Conn, channel chan State, s State) {
 		fmt.Println("Master received a state")
 	}
 }
+
 
 //
 /*--------Functions for sync donezo----------*/
