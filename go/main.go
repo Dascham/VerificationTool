@@ -1,7 +1,6 @@
 package main
 
 import (
-	"sync"
 	"time"
 )
 
@@ -35,7 +34,7 @@ func Node(){
 }
 
 func ExploreDistributed(initialState State) []State{
-	var mutex sync.Mutex = sync.Mutex{}
+	//var mutex sync.Mutex = sync.Mutex{}
 	var channel chan State = make(chan State, 10.000) //buffer size 10.000, used for transmitting states
 	//var chanDonezo chan bool = make(chan bool)
 
