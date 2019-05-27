@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sync"
 	"time"
 )
 
@@ -34,6 +35,7 @@ func Node(){
 }
 
 func ExploreDistributed(initialState State) []State{
+	var mutex sync.Mutex = sync.Mutex{}
 	var channel chan State = make(chan State, 10.000) //buffer size 10.000, used for transmitting states
 	//var chanDonezo chan bool = make(chan bool)
 
@@ -126,9 +128,12 @@ func ExploreDistributed(initialState State) []State{
 		//put all states received from other nodes in waitinglist
 		tempList := FromChannelToList(channel)
 		for _, state := range tempList{
-			hashedStates[state.ToString()] = state.ToString()
+			_, ok := hashedStates[state.ToString()] //ok is true if state is seen
+			if !ok { //if not okay, then add stuff, otherwise skip
+				hashedStates[state.ToString()] = state.ToString()
+				waitingList = append(waitingList, state)
+			}
 		}
-		waitingList = append(waitingList, tempList...)
 
 		if(len(waitingList) == 0){
 			time.Sleep(100*time.Millisecond) //if empty we wait a bit, to see if other machines send some states that need exploration
