@@ -25,64 +25,57 @@ class SocketThread {
 
     void run() {
         while (running) {
-            printf("socketthread\n");
-            if (socket.bytes_available() > sizeof(uint8_t) * MODEL_AUTOMATA + sizeof(int8_t) * MODEL_VARIABLES) {
+            if (!socket.is_valid()) {
+                fprintf(stderr, "Socket is invalid\n");
+                exit(1);
+            }
 
-                kn::buffer<sizeof(uint8_t) * MODEL_AUTOMATA> locationBuffer;
-                kn::buffer<sizeof(int8_t) * MODEL_AUTOMATA> variableBuffer;
+            if (true) {
+                const size_t locSize = sizeof(uint8_t) * MODEL_AUTOMATA;
+                const size_t varSize = sizeof(int8_t) * MODEL_VARIABLES;
 
-                const auto [sizeLoc, statusLoc] = socket.recv(locationBuffer);
-                if (statusLoc != kn::socket_status::valid) {
-                    std::cout << "Socket not valid when receiving location vector, error: " << std::hex << statusLoc << "bytes: " << sizeLoc << std::endl;
-                }
+                std::vector<uint8_t> locations(MODEL_AUTOMATA);
+                std::vector<int8_t> variables(MODEL_VARIABLES);
 
-                const auto [sizeVar, statusVar] = socket.recv(locationBuffer);
-                if (statusLoc != kn::socket_status::valid) {
-                    std::cout << "Socket not valid when receiving variable vector, error: " << std::hex << statusVar << "bytes: " << sizeVar << std::endl;
-                }
-
-                // Print received state
-                if (true) {
-                    std::cout << "Recv State:\n"
-                                 "Loc: ";
-
-                    for (const auto &loc : locationBuffer) {
-                        std::cout << static_cast<unsigned int>(loc) << " ";
+                //printf("Receiving state...\n");
+                for (size_t bytesRead = 0; bytesRead < MODEL_AUTOMATA; /**/) {
+                    kn::buffer<1*sizeof(uint8_t)> buffer;
+                    const auto [sizeLoc, statusLoc] = socket.recv(buffer);
+                    if (sizeLoc > 0) {
+                        assert(sizeLoc == sizeof(uint8_t));
+                        locations[bytesRead] = static_cast<uint8_t>(buffer[0]);
+                        ++bytesRead;
                     }
-
-                    std::cout << "\n"
-                                 "Var: ";
-
-                    for (const auto &var : variableBuffer) {
-                        std::cout << static_cast<int>(var) << " ";
+                }
+                for (size_t bytesRead = 0; bytesRead < MODEL_VARIABLES; /**/) {
+                    kn::buffer<1*sizeof(uint8_t)> buffer;
+                    const auto [sizeVar, statusVar] = socket.recv(buffer);
+                    if (sizeVar > 0) {
+                        assert(sizeVar == sizeof(int8_t));
+                        variables[bytesRead] = static_cast<int8_t>(buffer[0]);
+                        ++bytesRead;
                     }
-
-                    std::cout << "\n" << std::endl;
-                }
-
-                std::vector<uint8_t> locations(locationBuffer.size());
-                std::vector<int8_t> variables(variableBuffer.size());
-
-                for (const auto &loc : locationBuffer) {
-                    locations.emplace_back(static_cast<uint8_t>(loc));
-                }
-                for (const auto &var : variableBuffer) {
-                    variables.emplace_back(static_cast<int8_t>(var));
                 }
 
                 {
+                    State newState{locations, variables};
                     std::unique_lock lock{mutex}; // Lock until leaving scope
-                    queue.emplace(locations, variables);
+                    queue.emplace(newState);
                 }
+
+                // send ACK
+                kn::buffer<1> ackBuffer{static_cast<std::byte>(0x42)};
+                socket.send(ackBuffer);
+
             }
         }
     }
 
 public:
     // Used to hand over the queue to the worker thread
-    std::queue<State> &&stealQueue() {
+    void stealQueue(std::queue<State> &stateQueue) {
         std::unique_lock lock{mutex};
-        return std::move(queue);
+        std::swap(queue, stateQueue);
     }
 
     void join() {

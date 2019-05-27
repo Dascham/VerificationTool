@@ -7,6 +7,7 @@
 
 #include "util.h"
 #include "State.h"
+#include "Block.h"
 #include "model/Model.h"
 
 namespace modelcheckers {
@@ -15,6 +16,7 @@ namespace modelcheckers {
         size_t exploredCounter = 0;
         size_t generatedCounter = 1; // Start with initial state "generated"
         size_t duplicateCounter = 0;
+        size_t sentCounter = 0;
     };
 
     class BaseModelChecker {
@@ -26,12 +28,14 @@ namespace modelcheckers {
             std::queue<State> stateQueue{};
             std::unordered_set<State> encounteredStates{};
 
-            virtual bool addNewState(const State &state);
+            bool addNewState(const State &state);
+            virtual void handleNewState(const State &newState, const State &oldState, std::vector<size_t> changedLocations);
             bool checkInvariants(const State &state);
-            size_t generateSuccessors(const State &state);
+            void generateSuccessors(const State &state);
 
             void addInitialState();
 
+            void printStatistics();
     public:
             virtual void checkModel() = 0;
 

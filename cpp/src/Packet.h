@@ -3,7 +3,7 @@
 
 struct MasterPacket {
     enum class Type : uint8_t {
-        InitialState, IsDone, IsStillDone, Terminate/*TODO: should output error msg on worker if this was invalid*/
+        Invalid, InitialState, IsDone, IsStillDone, Terminate
     };
 
     Type type;
@@ -14,7 +14,7 @@ struct MasterPacket {
 
 struct WorkerPacket {
     enum class Type : uint8_t {
-        NotDone, FirstDone, SecondDone
+        Invalid, NotDone, FirstDone, SecondDone
     };
 
     Type type;

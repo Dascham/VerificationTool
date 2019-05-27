@@ -5,9 +5,10 @@
 #include <vector>
 #include <string>
 
-#include "../State.h"
+#include "State.h"
 #include "Location.h"
 #include "Edge.h"
+#include "Block.h"
 
 namespace model {
 
@@ -26,8 +27,10 @@ namespace model {
         std::vector<Location> locations;
         size_t initialLocaton;
 
-        explicit Automaton(std::vector<Location> locations, size_t initialLocation = 0)
-            : locations{std::move(locations)}, initialLocaton{initialLocation} {}
+        Partitioning partitioning;
+
+        explicit Automaton(std::vector<Location> locations, size_t initialLocation = 0, Partitioning partitioning = {})
+            : locations{std::move(locations)}, initialLocaton{initialLocation}, partitioning{std::move(partitioning)} {}
     };
 
 }

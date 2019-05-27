@@ -14,7 +14,7 @@ find_package(Threads REQUIRED)
 add_executable(cpp
         src/main.cpp
         src/State.h
-        src/Group.h
+        src/Block.h
         src/model/Model.h
         src/model/Location.h
         src/model/Edge.h
@@ -26,6 +26,7 @@ add_executable(simple_model_checker
         src/simple_model_checker.cpp
         src/State.cpp
         src/modelcheckers/BaseModelChecker.cpp
+        src/Block.cpp
         )
 
 target_link_libraries(simple_model_checker Threads::Threads)
@@ -38,5 +39,9 @@ add_executable(worker
         src/worker.cpp
         src/State.cpp
         src/modelcheckers/BaseModelChecker.cpp
+        src/Block.cpp
         )
 target_link_libraries(worker Threads::Threads)
+
+add_custom_target(distributed_both)
+add_dependencies(distributed_both master worker)
