@@ -26,13 +26,13 @@ func Master(){
 	initializeNodes(ipaddresses)
 	println("Initialization done")
 
-	list := ExploreDistributed(ParallelSetup(SetupCounterModel()))
+	list := ExploreDistributed(ParallelSetup(SetupCounterModel(), SetupCounterModel(), SetupCounterModel()))
 	print("Explored states: ")
 	println(len(list))
 }
 func Node(){
 	GetInitialized()
-	list := ExploreDistributed(ParallelSetup(SetupCounterModel()))
+	list := ExploreDistributed(ParallelSetup(SetupCounterModel(), SetupCounterModel(), SetupCounterModel()))
 	print("Explored states: ")
 	println(len(list))
 }

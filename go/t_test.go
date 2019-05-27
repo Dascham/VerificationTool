@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 )
 
 //this test should be the first test to call the function SetupTemplate(), otherwise it will fail
@@ -332,13 +333,14 @@ func TestBuffer(t *testing.T){
 }
 
 func TestExplore3(t *testing.T) {
+	start := time.Now()
 	s := EmptyState()
 	s.globalVariables = make(map[string]int)
-	s.allTemplates = append(s.allTemplates, SetupCounterModel())
+	s.allTemplates = append(s.allTemplates, SetupCounterModel(), SetupCounterModel(), SetupCounterModel())
 	list := Explore(s)
 	print("Number of states explored: ")
 	println(len(list))
-
+	println(time.Since(start).String())
 }
 
 
