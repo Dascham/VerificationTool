@@ -334,10 +334,10 @@ func TestBuffer(t *testing.T){
 func TestExplore3(t *testing.T) {
 	s := EmptyState()
 	s.globalVariables = make(map[string]int)
-	s.allTemplates = append(s.allTemplates, SetupTestModel1(), SetupTestModel1(), SetupTestModel1())
+	s.allTemplates = append(s.allTemplates, SetupCounterModel(), SetupCounterModel(), SetupCounterModel())
 	list := Explore(s)
 	print("Number of states explored: ")
 	println(len(list))
-	//PrintStates(list)
+
 }
 

@@ -312,7 +312,7 @@ func MainSetupCounterModel() Template{
 	return template
 }
 //v_i == a,
-func SetupTestModel1()Template{
+func SetupTestTemplate1()Template{
 	var guard0 Guard = Guard{"a", ">", 2, ""}
 	var guard1 Guard = Guard{"a", "<", 16, ""}
 	var guard2 Guard = Guard{"a", ">", 5, ""}
