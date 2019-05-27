@@ -144,6 +144,9 @@ func HelpPutStateInChannel(conn net.Conn, channel chan State, s State) {
 		fmt.Printf("Could not close connection: %s", err3)
 	}
 	channel <- s //send state on channel 'channel'
+	if selfNodeNumber == 0 {
+		fmt.Println("Master received a state")
+	}
 }
 
 //
