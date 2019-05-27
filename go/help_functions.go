@@ -311,17 +311,17 @@ func MainSetupCounterModel() Template{
 	location0 = location0.AcceptOutGoingEdges(edge)
 	return template
 }
-//v_i == a,
+//v_i == c,
 func SetupTestTemplate1()Template{
-	var guard0 Guard = Guard{"a", ">", 2, ""}
-	var guard1 Guard = Guard{"a", "<", 16, ""}
-	var guard2 Guard = Guard{"a", ">", 5, ""}
+	var guard0 Guard = Guard{"c", ">", 2, ""}
+	var guard1 Guard = Guard{"c", "<", 16, ""}
+	var guard2 Guard = Guard{"c", ">", 5, ""}
 
-	var update0 Update = Update{"a", "+=", 3, ""}
-	var update1 Update = Update{"a", "+=", 2, ""}
-	var update2 Update = Update{"a", "--", 1, ""}
-	var update3 Update = Update{"a", "++", 1, ""}
-	var update4 Update = Update{"a", "-=", 3, ""}
+	var update0 Update = Update{"c", "+=", 3, ""}
+	var update1 Update = Update{"c", "+=", 2, ""}
+	var update2 Update = Update{"c", "--", 1, ""}
+	var update3 Update = Update{"c", "++", 1, ""}
+	var update4 Update = Update{"c", "-=", 3, ""}
 
 	var location0 Location = NewLocation("L0", Invariant{})
 	location0.BlockId = 0
@@ -413,7 +413,7 @@ func SetupTestTemplate1()Template{
 	var t Template = Template{}
 	t.InitialLocation = &location0
 	t.currentLocation = &location0
-	t.LocalVariables = map[string]int{"a":0}
+	t.LocalVariables = map[string]int{"c":0}
 	return t
 }
 //v_0 = b, v_i = c
@@ -454,7 +454,7 @@ func SetupTestTemplate2()Template{
 	var template Template = Template{}
 	template.currentLocation = &location0
 	template.InitialLocation = &location0
-	template.LocalVariables = make(map[string]int) //no local, only global vars
+	template.LocalVariables = map[string]int{"c":0} //local var is v_i, v_i = c
 
 	return template
 }
@@ -490,46 +490,46 @@ func SetupTestTemplate3()Template{
 	edge01 = edge01.AcceptGuards(guard1)
 	edge01.IsSend = false
 	edge01.Ch = "c"
-	edge01.AssignSrcDst(&location0, &location1)
+	edge01 = edge01.AssignSrcDst(&location0, &location1)
 
 	var edge03 Edge = Edge{}
 	edge03 = edge03.InitializeEdge()
 	edge03 = edge03.AcceptGuards(guard0)
-	edge03.AssignSrcDst(&location0, &location3)
+	edge03 = edge03.AssignSrcDst(&location0, &location3)
 
 	var edge12 Edge = Edge{}
 	edge12 = edge12.InitializeEdge()
 	edge12 = edge12.AcceptUpdates(update2)
-	edge12.AssignSrcDst(&location1, &location2)
+	edge12 = edge12.AssignSrcDst(&location1, &location2)
 
 	var edge34 Edge = Edge{}
 	edge34 = edge34.InitializeEdge()
 	edge34 = edge34.AcceptUpdates(update0)
-	edge34.AssignSrcDst(&location3, &location4)
+	edge34 = edge34.AssignSrcDst(&location3, &location4)
 
 	var edge45 Edge = Edge{}
 	edge45 = edge45.InitializeEdge()
-	edge45.AssignSrcDst(&location4, &location5)
+	edge45 = edge45.AssignSrcDst(&location4, &location5)
 
 	var edge25 Edge = Edge{}
 	edge25 = edge25.InitializeEdge()
 	edge25 = edge25.AcceptUpdates(update1)
-	edge25.AssignSrcDst(&location2, &location5)
+	edge25 = edge25.AssignSrcDst(&location2, &location5)
 
 	var edge56 Edge = Edge{}
 	edge56 = edge56.InitializeEdge()
 	edge56 = edge56.AcceptGuards(guard2)
-	edge56.AssignSrcDst(&location5, &location6)
+	edge56 = edge56.AssignSrcDst(&location5, &location6)
 
 	var edge67 Edge = Edge{}
 	edge67 = edge67.InitializeEdge()
 	edge67 = edge67.AcceptUpdates(update0)
-	edge67.AssignSrcDst(&location6, &location7)
+	edge67 = edge67.AssignSrcDst(&location6, &location7)
 
 	var edge70 Edge = Edge{}
 	edge70 = edge70.InitializeEdge()
 	edge70 = edge70.AcceptUpdates(update0)
-	edge70.AssignSrcDst(&location6, &location7)
+	edge70 = edge70.AssignSrcDst(&location6, &location7)
 
 	location0 = location0.AcceptOutGoingEdges(edge01, edge03)
 	location1 = location1.AcceptOutGoingEdges(edge12)
@@ -541,7 +541,91 @@ func SetupTestTemplate3()Template{
 	location7 = location7.AcceptOutGoingEdges(edge70)
 
 	var template Template = Template{}
-	template.LocalVariables = make(map[string]int)
+	template.LocalVariables = map[string]int{"c":0}
+	template.InitialLocation = &location0
+	template.currentLocation = &location0
+
+	return template
+}
+func SetupTestTemplate4_nosync()Template{
+	var guard0 Guard = Guard{"c", ">", 2, ""}
+	var guard1 Guard = Guard{"c", "<", 16, ""}
+
+	var update0 Update = Update{"c", "--", 0,""}
+	var update2 Update = Update{"c", "+=", 2,""}
+
+	var location0 Location = NewLocation("L0", Invariant{})
+	location0.BlockId = 0
+	var location1 Location = NewLocation("L1", Invariant{})
+	location1.BlockId = 1
+	var location2 Location = NewLocation("L2", Invariant{})
+	location2.BlockId = 1
+	var location3 Location = NewLocation("L3", Invariant{})
+	location3.BlockId = 2
+	var location4 Location = NewLocation("L4", Invariant{})
+	location4.BlockId = 2
+	var location5 Location = NewLocation("L5", Invariant{})
+	location5.BlockId = 3
+	var location6 Location = NewLocation("L6", Invariant{})
+	location6.BlockId = 3
+	var location7 Location = NewLocation("L7", Invariant{})
+	location7.BlockId = 3
+
+	var edge01 Edge = Edge{}
+	edge01 = edge01.InitializeEdge()
+	edge01 = edge01.AcceptGuards(guard1)
+	edge01 = edge01.AssignSrcDst(&location0, &location1)
+
+	var edge03 Edge = Edge{}
+	edge03 = edge03.InitializeEdge()
+	edge03 = edge03.AcceptGuards(guard0)
+	edge03 = edge03.AssignSrcDst(&location0, &location3)
+
+	var edge12 Edge = Edge{}
+	edge12 = edge12.InitializeEdge()
+	edge12 = edge12.AcceptUpdates(update2)
+	edge12 = edge12.AssignSrcDst(&location1, &location2)
+
+	var edge34 Edge = Edge{}
+	edge34 = edge34.InitializeEdge()
+	edge34 = edge34.AcceptUpdates(update0)
+	edge34 = edge34.AssignSrcDst(&location3, &location4)
+
+	var edge45 Edge = Edge{}
+	edge45 = edge45.InitializeEdge()
+	edge45 = edge45.AssignSrcDst(&location4, &location5)
+
+	var edge25 Edge = Edge{}
+	edge25 = edge25.InitializeEdge()
+	edge25 = edge25.AcceptUpdates()
+	edge25 = edge25.AssignSrcDst(&location2, &location5)
+
+	var edge56 Edge = Edge{}
+	edge56 = edge56.InitializeEdge()
+	edge56 = edge56.AcceptGuards()
+	edge56 = edge56.AssignSrcDst(&location5, &location6)
+
+	var edge67 Edge = Edge{}
+	edge67 = edge67.InitializeEdge()
+	edge67 = edge67.AcceptUpdates(update0)
+	edge67 = edge67.AssignSrcDst(&location6, &location7)
+
+	var edge70 Edge = Edge{}
+	edge70 = edge70.InitializeEdge()
+	edge70 = edge70.AcceptUpdates(update0)
+	edge70 = edge70.AssignSrcDst(&location6, &location7)
+
+	location0 = location0.AcceptOutGoingEdges(edge01, edge03)
+	location1 = location1.AcceptOutGoingEdges(edge12)
+	location2 = location2.AcceptOutGoingEdges(edge25)
+	location3 = location3.AcceptOutGoingEdges(edge34)
+	location4 = location4.AcceptOutGoingEdges(edge45)
+	location5 = location5.AcceptOutGoingEdges(edge56)
+	location6 = location6.AcceptOutGoingEdges(edge67)
+	location7 = location7.AcceptOutGoingEdges(edge70)
+
+	var template Template = Template{}
+	template.LocalVariables = map[string]int{"c":0}
 	template.InitialLocation = &location0
 	template.currentLocation = &location0
 

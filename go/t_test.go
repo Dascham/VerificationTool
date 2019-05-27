@@ -343,7 +343,6 @@ func TestExplore3(t *testing.T) {
 	println(time.Since(start).String())
 }
 func TestSetupTripleCounter(t *testing.T) {
-
 	s := EmptyState()
 	s.allTemplates = make([]Template, 0,0)
 	s.allTemplates = append(s.allTemplates, SetupTripleCounter())
@@ -355,6 +354,7 @@ func TestSetupTripleCounter(t *testing.T) {
 		fmt.Println(list[i].ToString())
 	}
 }
+
 
 
 

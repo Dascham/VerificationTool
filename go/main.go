@@ -12,7 +12,9 @@ import (
 var selfNodeNumber int = 0
 
 func main(){
-	Master()
+	Experiment1();
+	Experiment2();
+	Experiment3();
 }
 func Master(){
 	selfNodeNumber = 0
