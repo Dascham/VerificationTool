@@ -32,8 +32,6 @@ namespace modelcheckers {
         const size_t workerID;
         bool running = true;
 
-        Herd herd; // TODO: this, pass to ctor?
-
         MasterPacket receiveMasterPacket() {
             kn::buffer<2> buffer;
             auto [size, status] = masterSocket.recv(buffer);
@@ -67,7 +65,6 @@ namespace modelcheckers {
                 const auto[data_size, status_code] = socket.recv(buffer);
 
                 for (int i = 0; i < data_size; ++i) {
-                    printf("!!!%zx %x\n", static_cast<size_t>(buffer[i]), 0x42);
                     assert(buffer[i] == static_cast<std::byte>(0x42));
                 }
 
@@ -82,9 +79,9 @@ namespace modelcheckers {
             // Don't send to self using socket
             if (otherID == workerID) {
                 addNewState(state);
-                std::cout << "Kept: " << state << std::endl;
                 return;
             }
+            statistics.sentCounter++;
 
             kn::tcp_socket &socket{outgoingSockets[otherID]};
             pendingAcks[otherID]++;
@@ -106,8 +103,6 @@ namespace modelcheckers {
             socket.send(locationBuffer);
             socket.send(variableBuffer);
 
-            std::cout << "Sent: " << state << std::endl;
-
             consumePendingAcks(otherID);
         }
 
@@ -122,15 +117,30 @@ namespace modelcheckers {
 
             bool shouldHash = false;
             for (const auto &loc : changedLocations) {
-                // TODO: get old-/new-Group
-                if (oldState.locations[loc]/*TODO: is cover*/ || oldState.locations[loc] != newState.locations[loc]/*TODO: the herd of old/new*/) {
+                // Assert to ensure block vector is the right size
+                assert(model.automata[loc].locations.size() == model.automata[loc].partitioning.blocks.size());
+
+                const auto &blocks = model.automata[loc].partitioning.blocks;
+                const auto &oldBlock = blocks[oldState.locations[loc]];
+                const auto &newBlock = blocks[newState.locations[loc]];
+
+                if (oldBlock.isCover() || newBlock.isHead()) {
                     shouldHash = true;
                     break;
-                }
+                } else assert(oldBlock.ID == newBlock.ID || (newBlock.isCover() && !oldBlock.isCover())); // Either we stayed in the block or only the new block is cover
             }
 
             if (shouldHash) {
-                sendState(newState, std::hash<State>{}(newState) % WORKER_COUNT);
+                std::vector<Block> stateBlocks{};
+                for (int i = 0; i < newState.locations.size(); ++i) {
+                    const auto &thisLoc = newState.locations[i];
+                    const auto &blocks = model.automata[i].partitioning.blocks;
+                    stateBlocks.emplace_back(blocks[thisLoc]);
+                }
+
+                Herd herd{stateBlocks};
+
+                sendState(newState, std::hash<Herd>{}(herd) % WORKER_COUNT);
             } else { // Keep the state locally
                 addNewState(newState);
             }
@@ -145,7 +155,12 @@ namespace modelcheckers {
         }
 
         void exploreStateQueue() {
+            size_t iter = 0;
             while (!stateQueue.empty()) {
+                ++iter;
+                if (iter%((size_t)1<<(size_t)16) == 0) printf("Exploring active state queue, iter=%zu\tcurrent stateQueue.size()=%zu\n",
+                                              iter, stateQueue.size());
+
                 State current = stateQueue.front();
                 stateQueue.pop();
                 generateSuccessors(current);
@@ -244,9 +259,9 @@ namespace modelcheckers {
 
                 // Loop through SocketThreads and take their state queue
                 for (auto &socketThread : socketThreads) {
-                    socketThread.stealQueue(stateQueue);
-                    //addStateQueue(socketThread.stealQueue());
-
+                    decltype(stateQueue) newQueue;
+                    socketThread.stealQueue(newQueue);
+                    addStateQueue(newQueue);
 
                     if (!stateQueue.empty()) {
                         didWork = true;
@@ -258,7 +273,6 @@ namespace modelcheckers {
                     doneState = DoneState::NotDone;
                 }
 
-                /*for (int i = 0; i < 3; ++i)*/  /*if (masterSocket.bytes_available() < 2) std::this_thread::sleep_for(.1s); else*/
                 if (masterSocket.bytes_available() >= 2) {
 
                     MasterPacket masterPacket = receiveMasterPacket();//{MasterPacket::Type::Terminate, 0};
@@ -279,8 +293,6 @@ namespace modelcheckers {
                                     for (size_t i = 0; i < WORKER_COUNT; ++i) {
                                         if (consumePendingAcks(i) > 0) {
                                             stillPendingAcks = true;
-                                            //printf("Pending %zu: %zu\n", i, pendingAcks[i]);
-                                            //std::this_thread::sleep_for(100ms);
                                             break;
                                         }
                                     }
@@ -295,7 +307,6 @@ namespace modelcheckers {
                                         goto continue_running;
                                     }
                                 }
-
 
                                 printf("\tResponding NotDone(%u) at IsDone to master!\n", masterPacket.data);
                                 WorkerPacket response{WorkerPacket::Type::NotDone, masterPacket.data};
@@ -316,11 +327,6 @@ namespace modelcheckers {
                                 //std::this_thread::sleep_for(5000ms);
                                 printf("\tChecking SocketThread queues one last time...\n");
                                 for (auto &socketThread : socketThreads) {
-
-                                    //printf("\t\tWait for one SocketThread iteration...\n");
-                                    socketThread.flag = false;
-                                    while(!socketThread.flag) std::this_thread::yield(); // Wait for one iteration of the SocketThread loop
-                                    //printf("\t\t\tSocketThread iteration confirmed!\n");
 
                                     //auto queue = socketThread.stealQueue(std::queue<State>());
                                     socketThread.stealQueue(stateQueue);
@@ -373,21 +379,15 @@ namespace modelcheckers {
             }
             finish_running:
 
-            printf("Joining all SocketThreads...\n");
-            for (size_t i = 0; i < socketThreads.size(); ++i) {
-                printf("Trying to join SocketThread %zu...\n", i);
-                socketThreads[i].join();
-            }
-
             printf("Model Checker finished!\n");
 
             printStatistics();
-
+            exit(0);
         }
 
 
-        explicit DistributedModelChecker(size_t workerID, model::Model model, Herd herd = {{}})
-                : workerID{workerID}, BaseModelChecker{std::move(model)}, herd{std::move(herd)} {}
+        explicit DistributedModelChecker(size_t workerID, model::Model model)
+                : workerID{workerID}, BaseModelChecker{std::move(model)} {}
     };
 
 }

@@ -23,8 +23,5 @@ int main(int argc, char *argv[]) {
     DistributedModelChecker modelChecker{workerID, THE_MODEL};
     modelChecker.checkModel();
 
-    // TODO: ASSERT model loc,var sizes == constants, do first?
-
-
     return 0;
 }

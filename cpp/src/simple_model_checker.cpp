@@ -12,9 +12,7 @@ int main() {
 
     using namespace model;
     using namespace modelcheckers;
-
-    constexpr size_t numVars = 1;
-
+    
     SimpleModelChecker simpleModelChecker{THE_MODEL};
     simpleModelChecker.checkModel();
 

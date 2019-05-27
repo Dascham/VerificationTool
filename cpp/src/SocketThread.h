@@ -14,9 +14,6 @@
 namespace kn = kissnet;
 
 class SocketThread {
-public:
-    std::atomic<bool> flag;
-private:
     std::atomic<bool> running;
 
     std::thread thread;
@@ -28,68 +25,37 @@ private:
 
     void run() {
         while (running) {
-            flag = true;
-
             if (!socket.is_valid()) {
                 fprintf(stderr, "Socket is invalid\n");
                 exit(1);
             }
 
-            if (socket.bytes_available() >= sizeof(uint8_t) * MODEL_AUTOMATA + sizeof(int8_t) * MODEL_VARIABLES) {
+            if (true) {
+                const size_t locSize = sizeof(uint8_t) * MODEL_AUTOMATA;
+                const size_t varSize = sizeof(int8_t) * MODEL_VARIABLES;
 
-                kn::buffer<sizeof(uint8_t) * MODEL_AUTOMATA> locationBuffer;
-                kn::buffer<sizeof(int8_t) * MODEL_AUTOMATA> variableBuffer;
+                std::vector<uint8_t> locations(MODEL_AUTOMATA);
+                std::vector<int8_t> variables(MODEL_VARIABLES);
 
-                const auto [sizeLoc, statusLoc] = socket.recv(locationBuffer);
-                if (statusLoc != kn::socket_status::valid) {
-                    std::cerr << "Socket not valid when receiving location vector, error: " << std::hex << statusLoc << "bytes: " << sizeLoc << std::endl;
-                    exit(1);
-                }
-                assert(sizeLoc == locationBuffer.size());
-                assert(sizeLoc == THE_MODEL.automata.size());
-
-                const auto [sizeVar, statusVar] = socket.recv(variableBuffer);
-                if (statusLoc != kn::socket_status::valid) {
-                    std::cerr << "Socket not valid when receiving variable vector, error: " << std::hex << statusVar << "bytes: " << sizeVar << std::endl;
-                    exit(1);
-                }
-                assert(sizeVar == variableBuffer.size());
-                assert(sizeLoc == THE_MODEL.numVariables);
-
-                // Print received state
-                if (true) {
-                    std::cout << "Recv State:\n"
-                                 "Loc: ";
-
-                    for (const auto &loc : locationBuffer) {
-                        //std::cout << static_cast<uint8_t>(loc) << " ";
-                        printf("%u ", static_cast<uint8_t>(loc));
+                //printf("Receiving state...\n");
+                for (size_t bytesRead = 0; bytesRead < MODEL_AUTOMATA; /**/) {
+                    kn::buffer<1*sizeof(uint8_t)> buffer;
+                    const auto [sizeLoc, statusLoc] = socket.recv(buffer);
+                    if (sizeLoc > 0) {
+                        assert(sizeLoc == sizeof(uint8_t));
+                        locations[bytesRead] = static_cast<uint8_t>(buffer[0]);
+                        ++bytesRead;
                     }
-
-                    std::cout << "\n"
-                                 "Var: ";
-
-                    for (const auto &var : variableBuffer) {
-                        //std::cout << static_cast<int8_t>(var) << " ";
-                        printf("%d ", static_cast<int8_t>(var));
-
+                }
+                for (size_t bytesRead = 0; bytesRead < MODEL_VARIABLES; /**/) {
+                    kn::buffer<1*sizeof(uint8_t)> buffer;
+                    const auto [sizeVar, statusVar] = socket.recv(buffer);
+                    if (sizeVar > 0) {
+                        assert(sizeVar == sizeof(int8_t));
+                        variables[bytesRead] = static_cast<int8_t>(buffer[0]);
+                        ++bytesRead;
                     }
-
-                    std::cout << "\n" << std::endl;
                 }
-
-                std::vector<uint8_t> locations(locationBuffer.size());
-                std::vector<int8_t> variables(variableBuffer.size());
-
-
-
-                for (int i = 0; i < locationBuffer.size(); ++i) {
-                    locations[i] = static_cast<uint8_t>(locationBuffer[i]);
-                }
-                for (int i = 0; i < variableBuffer.size(); ++i) {
-                    variables[i] = static_cast<int8_t>(variableBuffer[i]);
-                }
-
 
                 {
                     State newState{locations, variables};
@@ -101,22 +67,15 @@ private:
                 kn::buffer<1> ackBuffer{static_cast<std::byte>(0x42)};
                 socket.send(ackBuffer);
 
-            } else if (socket.bytes_available() != 0) {
-                // Just to debug if it gets stuck at some partial state
-                //printf("SOCKBYTES: %zu/%zu\n", socket.bytes_available(), ((sizeof(uint8_t) * MODEL_AUTOMATA + sizeof(int8_t) * MODEL_VARIABLES)) );
             }
         }
     }
 
 public:
     // Used to hand over the queue to the worker thread
-    /*std::queue<State> &&*/ void stealQueue(std::queue<State> &stateQueue) {
+    void stealQueue(std::queue<State> &stateQueue) {
         std::unique_lock lock{mutex};
         std::swap(queue, stateQueue);
-        //auto stolenQueue = std::move(queue);
-        //queue = {};
-        //return std::move(stolenQueue);
-        //return std::move(queue);
     }
 
     void join() {

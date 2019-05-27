@@ -13,23 +13,16 @@ namespace modelcheckers {
                     state.locations.size(), model.automata.size(),
                     state.variables.size(), model.numVariables);
 
-            fprintf(stderr, "DEBUG SKIPPING!\n"); // TODO: remove
-            return false;
+            exit(1);
         }
 
         auto ret = encounteredStates.insert(state);
         bool isNew = ret.second;
 
-        //assert(state.locations.size() ==
-        //       model.automata.size()); // State should have one location index per automata
-
         if (isNew) {
-            //std::cout << "New state encountered; adding to queue...\n"
-            //          << state << std::endl;
             stateQueue.push(state);
         } else {
-            //std::cout << "Already encountered state...\n"
-            //          << state << std::endl;
+            statistics.duplicateCounter++;
         }
 
         return isNew;
@@ -59,7 +52,6 @@ namespace modelcheckers {
             const size_t loc_i = state.locations[i];
             const Location &loc = automaton.locations[loc_i];
 
-            // TODO: use indexed for loop to catch edge number in case of exception(model error)
             for (const auto &edge : loc.edges) { // For each edge from the current location in the automaton
 
                 // Guard
@@ -86,7 +78,6 @@ namespace modelcheckers {
                             const size_t syncedLoc_j = state.locations[j];
                             const Location &syncedLoc = syncedAutomaton.locations[syncedLoc_j];
 
-                            // TODO: use indexed for loop to catch edge number in case of exception(model error)
                             for (auto &syncedEdge : syncedLoc.edges) {
                                 if (syncedEdge.sync.type == Sync::Type::Recv &&
                                     syncedEdge.sync.channel == edge.sync.channel &&
@@ -103,17 +94,17 @@ namespace modelcheckers {
                                     if (checkInvariants(syncedState)) {
                                         handleNewState(syncedState, state, {i,j});
                                         statistics.generatedCounter++;
-                                    } // TODO: count both valid and non valid states
+                                    }
                                 }
                             }
                         }
                     } else { // Handle non-synchronizing edges
 
-                        // Invariants for new state TODO: DRY
+                        // Invariants for new state
                         if (checkInvariants(newState)) {
                             handleNewState(newState, state, {i});
                             statistics.generatedCounter++;
-                        } // TODO: count both valid and non valid states
+                        }
                     }
                 }
             }
@@ -137,8 +128,9 @@ namespace modelcheckers {
         printf("Statistics:\n"
                "\texplored: %zu\n"
                "\tgenerated: %zu\n"
-               "\tduplicate: %zu\n",
-               statistics.exploredCounter, statistics.generatedCounter, statistics.duplicateCounter);
+               "\tduplicate: %zu\n"
+               "\tsent: %zu\n",
+               statistics.exploredCounter, statistics.generatedCounter, statistics.duplicateCounter, statistics.sentCounter);
     }
 
 }

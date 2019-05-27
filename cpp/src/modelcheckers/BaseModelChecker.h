@@ -16,6 +16,7 @@ namespace modelcheckers {
         size_t exploredCounter = 0;
         size_t generatedCounter = 1; // Start with initial state "generated"
         size_t duplicateCounter = 0;
+        size_t sentCounter = 0;
     };
 
     class BaseModelChecker {
@@ -38,7 +39,7 @@ namespace modelcheckers {
     public:
             virtual void checkModel() = 0;
 
-            explicit BaseModelChecker(model::Model model, const Herd& herd = {}) : model{std::move(model)} {}
+            explicit BaseModelChecker(model::Model model) : model{std::move(model)} {}
     };
 
 }
