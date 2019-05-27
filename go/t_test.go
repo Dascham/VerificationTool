@@ -336,11 +336,26 @@ func TestExplore3(t *testing.T) {
 	start := time.Now()
 	s := EmptyState()
 	s.globalVariables = make(map[string]int)
-	s.allTemplates = append(s.allTemplates, SetupCounterModel(), SetupCounterModel(), SetupCounterModel())
+	s.allTemplates = append(s.allTemplates, SetupCounterModel(), SetupCounterModel())
 	list := Explore(s)
 	print("Number of states explored: ")
 	println(len(list))
 	println(time.Since(start).String())
 }
+func TestSetupTripleCounter(t *testing.T) {
+
+	s := EmptyState()
+	s.allTemplates = make([]Template, 0,0)
+	s.allTemplates = append(s.allTemplates, SetupTripleCounter())
+	s.globalVariables = make(map[string]int)
+	list := Explore(s)
+	print("Number of states explored: ")
+	println(len(list))
+	for i:=0; i<10;i++{
+		fmt.Println(list[i].ToString())
+	}
+}
+
+
 
 
