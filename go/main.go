@@ -135,7 +135,7 @@ func ExploreDistributed(initialState State) []State{
 		}
 
 		if(len(waitingList) == 0){
-			time.Sleep(100*time.Millisecond) //if empty we wait a bit, to see if other machines send some states that need exploration
+			time.Sleep(900*time.Millisecond) //if empty we wait a bit, to see if other machines send some states that need exploration
 		}
 		tempList1 := FromChannelToList(channel)
 		waitingList = append(waitingList, tempList1...)
