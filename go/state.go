@@ -40,9 +40,12 @@ func (s State) ConfigureState(si StateInformation) State{
 	return s
 }
 func helperConfigLocation(t Template, locationid int) *Location{
+	var hashTable map[int]bool = make(map[int]bool)
+
 	var correctLocation *Location
 	var locations []*Location = make([]*Location, 0,0)
 	locations = append(locations, t.InitialLocation)
+	hashTable[t.InitialLocation.LocationId] = true
 	for len(locations) > 0 {
 		if (locations[0].LocationId == locationid){
 			correctLocation = locations[0]
@@ -50,7 +53,11 @@ func helperConfigLocation(t Template, locationid int) *Location{
 		}else{
 			//add all locations to list, from outgoing edges
 			for _,edge := range locations[0].Edges{
-				locations = append(locations, edge.Dst)
+				_, ok := hashTable[edge.Dst.LocationId] //ok is true, if locationId is already in hashtable
+				if !ok { //if not ok, then we have not seen the dst before and we should add it
+					locations = append(locations, edge.Dst)
+					hashTable[edge.Dst.LocationId] = true
+				}
 			}
 			removeLocation(locations, 0)
 		}

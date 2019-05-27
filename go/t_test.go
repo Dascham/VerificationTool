@@ -340,4 +340,7 @@ func TestExplore3(t *testing.T) {
 	println(len(list))
 
 }
+func TestState_ConfigureState2(t *testing.T) {
+
+}
 

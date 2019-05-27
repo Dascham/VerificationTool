@@ -75,6 +75,7 @@ func GetInitialized(){
 		fmt.Printf("Could not close connection: %s", err4)
 	}
 	selfNodeNumber = num
+	println("Call me initialized and take me to town!")
 }
 
 func SendAState(s State, sendToNode uint32){
@@ -227,12 +228,12 @@ func MasterReceiveExploredStates(s State) []State{
 	var channelWithStates chan State = make(chan State, 50000)
 	ln, err := net.Listen("tcp", portNumbers1[2]) //port 5002
 	if err != nil {
-		fmt.Printf("Something went wrong: %s\n", err)
+		fmt.Printf("MasterReceiveExploredStates: %s\n", err)
 	}
 	for i:=0;i<len(ipaddresses);i++ {
 		conn, err1 := ln.Accept()
 		if err1 != nil {
-			fmt.Printf("%s\n", err1)
+			fmt.Printf("MasterReceive for loop ipaddresses: %s\n", err1)
 		}
 		go HelperMasterReceiveExploredState(conn, channelWithStates, s)
 	}
