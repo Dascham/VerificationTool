@@ -44,11 +44,12 @@ func ExploreDistributed(initialState State) []State{
 	var waitingList []State = make([]State, 0,0) //size zero, always, cause append fixes size by itself
 	var passedList []State = make([]State, 0,0)
 	var hashedStates map[string]string = make(map[string]string)
+
 	go ReceiveStates(channel, DeepCopyState(initialState)) //this concurrently receives states from the network, and puts them in a buffered channel
 
 	if (selfNodeNumber != 0){ //this blocks non-master nodes from exploring, until they receive a state
 		initialState = <- channel
-		//go NodeSyncDone(chanDonezo) //run this, which talks to master periodically to see if we all done
+
 	}
 	//master starts the exploration
 	hashedStates[initialState.ToString()] = initialState.ToString()
@@ -134,23 +135,21 @@ func ExploreDistributed(initialState State) []State{
 		waitingList = append(waitingList, tempList...)
 
 		if(len(waitingList) == 0){
-			time.Sleep(1*time.Second) //if empty we wait a bit, to see if other machines send some states that need exploration
+			time.Sleep(100*time.Millisecond) //if empty we wait a bit, to see if other machines send some states that need exploration
 		}
 		tempList1 := FromChannelToList(channel)
 		waitingList = append(waitingList, tempList1...)
 		//if waitingList still empty, we prolly done with exploring
 	}
-
-	//query all nodes for their passed list
-	//&& if all nodes respond positive
-	if (selfNodeNumber == 0 /*&& <-chanDonezo*/){
-		//send signal to goroutine to
+	/*
+	if (selfNodeNumber == 0){
 		passedList = append(passedList, MasterReceiveExploredStates(initialState)...)
 	}
 	if (selfNodeNumber != 0){
 		//chanDonezo <- true //this should be redundant now?
 		NodeSendExploredStates(passedList)
 	}
+	 */
 
 	return passedList
 }
