@@ -92,7 +92,7 @@ func SendAState(s State, sendToNode uint32){
 	conn, err1 := net.Dial("tcp", ipaddresses[sendToNode]+portNumbers1[1]) //5001
 
 	if err1 != nil{
-		fmt.Printf("Dial went wrong in SendState: %s", err1)
+		fmt.Printf("Dial went wrong in SendAState: %s", err1)
 	}
 
 	_, err2 := conn.Write(json_si)

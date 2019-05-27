@@ -112,10 +112,11 @@ func ExploreDistributed(initialState State) []State{
 						//add newstate to waitinglist, for distributed, call distribute function, which hashes and does stuff
 						if ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(newState.globalVariables){
 							var num uint32 = Hash(newState.ToString())
-							if (num%lenOfIpaddreses == uint32(selfNodeNumber)){
+							var sendToNode uint32 = num%lenOfIpaddreses
+							if (sendToNode == uint32(selfNodeNumber)){
 								waitingList = append(waitingList, newState)
 							}else{
-								SendAState(newState, num)
+								SendAState(newState, sendToNode)
 							}
 						}
 					}
