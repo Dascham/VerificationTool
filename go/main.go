@@ -26,13 +26,13 @@ func Master(){
 	initializeNodes(ipaddresses)
 	println("Initialization done")
 
-	list := ExploreDistributed(ParallelSetup(SetupCounterModel(), SetupCounterModel(), SetupCounterModel()))
+	list := ExploreDistributed(ParallelSetup(SetupCounterModel()))
 	print("Explored states: ")
 	println(len(list))
 }
 func Node(){
 	GetInitialized()
-	list := ExploreDistributed(ParallelSetup(SetupCounterModel(), SetupCounterModel(), SetupCounterModel()))
+	list := ExploreDistributed(ParallelSetup(SetupCounterModel()))
 	print("Explored states: ")
 	println(len(list))
 }
@@ -48,7 +48,7 @@ func ExploreDistributed(initialState State) []State{
 	go ReceiveStates(channel, DeepCopyState(initialState)) //this concurrently receives states from the network, and puts them in a buffered channel
 
 	if (selfNodeNumber != 0){ //this blocks non-master nodes from exploring, until they receive a state
-		initialState = <- channel
+		initialState = DeepCopyState(<- channel)
 
 	}
 	//master starts the exploration
