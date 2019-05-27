@@ -24,13 +24,15 @@ func Master(){
 	selfNodeNumber = 0
 	//assign numbers to nodes
 	initializeNodes(ipaddresses)
-	list := ExploreDistributed(ParallelSetup(SetupCounterModel(), SetupCounterModel(),SetupCounterModel()))
+	println("Initialization done")
+
+	list := ExploreDistributed(ParallelSetup(SetupCounterModel(), SetupCounterModel()))
 	print("Explored states: ")
 	println(len(list))
 }
 func Node(){
 	GetInitialized()
-	list := ExploreDistributed(ParallelSetup(SetupCounterModel(), SetupCounterModel(), SetupCounterModel()))
+	list := ExploreDistributed(ParallelSetup(SetupCounterModel(), SetupCounterModel()))
 	print("Explored states: ")
 	println(len(list))
 }
