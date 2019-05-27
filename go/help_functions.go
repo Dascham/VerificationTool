@@ -416,6 +416,12 @@ func SetupTestTemplate1()Template{
 	t.LocalVariables = map[string]int{"a":0}
 	return t
 }
+func ParallelSetup(template... Template) State{
+	s:=State{}
+	s.globalVariables = make(map[string]int)
+	s.allTemplates = append(s.allTemplates, template...)
+	return s
+}
 
 //
 //

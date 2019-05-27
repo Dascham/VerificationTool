@@ -10,13 +10,6 @@ import (
 
 var selfNodeNumber int = 0
 
-func ParallelSetup(template... Template) State{
-	s:=State{}
-	s.globalVariables = make(map[string]int)
-	s.allTemplates = append(s.allTemplates, template...)
-	return s
-}
-
 func main(){
 	Master()
 }
@@ -27,12 +20,15 @@ func Master(){
 	println("Initialization done")
 
 	list := ExploreDistributed(ParallelSetup(SetupCounterModel()))
+	PrintStates(list)
 	print("Explored states: ")
 	println(len(list))
+
 }
 func Node(){
 	GetInitialized()
 	list := ExploreDistributed(ParallelSetup(SetupCounterModel()))
+	PrintStates(list)
 	print("Explored states: ")
 	println(len(list))
 }
