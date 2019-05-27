@@ -51,7 +51,6 @@ func ExploreDistributed(initialState State) []State{
 		//go NodeSyncDone(chanDonezo) //run this, which talks to master periodically to see if we all done
 	}
 	//master starts the exploration
-
 	hashedStates[initialState.ToString()] = initialState.ToString()
 	waitingList = append(waitingList, initialState)
 
@@ -90,7 +89,6 @@ func ExploreDistributed(initialState State) []State{
 									}else{
 										SendAState(newState, num)
 									}
-
 								}
 							}
 						}
@@ -112,9 +110,13 @@ func ExploreDistributed(initialState State) []State{
 							hashedStates[temp] = temp
 						}
 						//add newstate to waitinglist, for distributed, call distribute function, which hashes and does stuff
-						//add only if map is valid, this should be made to better fix
-						if (ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(currentState.globalVariables)) {
-							waitingList = append(waitingList, newState)
+						if ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(newState.globalVariables){
+							var num uint32 = Hash(newState.ToString())
+							if (num%lenOfIpaddreses == uint32(selfNodeNumber)){
+								waitingList = append(waitingList, newState)
+							}else{
+								SendAState(newState, num)
+							}
 						}
 					}
 				}
