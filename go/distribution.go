@@ -10,7 +10,8 @@ import (
 	"time"
 )
 //Ip addresses, master is always [0]
-var ipaddresses []string = []string{"172.28.210.100", "172.28.211.53"}
+//var ipaddresses []string = []string{"172.28.210.100", "172.28.211.53"}
+var ipaddresses []string = []string{"192.168.1.153", "192.168.1.172"}
 var portNumbers1 []string = []string{":5000", ":5001", ":5002"}
 var lenOfIpaddreses uint32 = uint32(len(ipaddresses))
 

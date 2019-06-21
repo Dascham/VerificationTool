@@ -641,7 +641,7 @@ func ParallelSetup(template... Template) State{
 func SetupTripleCounter()Template{
 	var update0 Update = Update{"a", "++", 0, ""}
 	var update1 Update = Update{"b", "++", 0, ""}
-	//var update2 Update = Update{"c", "++", 0, ""}
+	var update2 Update = Update{"c", "++", 0, ""}
 
 	var location0 Location = NewLocation("L0", Invariant{})
 
@@ -655,13 +655,13 @@ func SetupTripleCounter()Template{
 	edge1 = edge1.AcceptUpdates(update1)
 	edge1 = edge1.AssignSrcDst(&location0, &location0)
 
-	/*
+
 	var edge2 Edge = Edge{}
 	edge2 = edge2.InitializeEdge()
 	edge2 = edge2.AcceptUpdates(update2)
 	edge2 = edge2.AssignSrcDst(&location0, &location0)
-	*/
-	location0 = location0.AcceptOutGoingEdges(edge0, edge1)
+
+	location0 = location0.AcceptOutGoingEdges(edge0, edge1, edge2)
 
 	var template Template = Template{}
 	template.LocalVariables = map[string]int{"a":0,"b":0}

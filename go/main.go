@@ -12,14 +12,7 @@ import (
 var selfNodeNumber int = 0
 
 func main(){
-	start := time.Now()
-	s := EmptyState()
-	s.globalVariables = make(map[string]int)
-	s.allTemplates = append(s.allTemplates, SetupCounterModel(), SetupCounterModel(), SetupCounterModel())
-	list := Explore(s)
-	print("Number of states explored: ")
-	println(len(list))
-	println(time.Since(start).String())
+	Master()
 }
 func Master(){
 	selfNodeNumber = 0

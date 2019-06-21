@@ -336,7 +336,7 @@ func TestExplore3(t *testing.T) {
 	start := time.Now()
 	s := EmptyState()
 	s.globalVariables = make(map[string]int)
-	s.allTemplates = append(s.allTemplates, SetupCounterModel(), SetupCounterModel(), SetupCounterModel())
+	s.allTemplates = append(s.allTemplates, SetupCounterModel())
 	list := Explore(s)
 	print("Number of states explored: ")
 	println(len(list))
