@@ -46,7 +46,7 @@ func ExploreDistributed(initialState State) []State{
 	go ReceiveStates(channel, DeepCopyState(initialState)) //this concurrently receives states from the network, and puts them in a buffered channel
 	fmt.Printf("The initialstate: %s\n", initialState.ToString())
 	if (selfNodeNumber != 0){ //this blocks non-master nodes from exploring, until they receive a state
-		initialState = <- channel
+		initialState = DeepCopyState(<- channel)
 
 	}
 	//master starts the exploration
@@ -76,7 +76,7 @@ func ExploreDistributed(initialState State) []State{
 								//check if state has been encountered before, must be done after advance
 								temp := newState.ToString()
 								if _, ok := hashedStates[temp]; ok{
-									break; //
+									continue; //
 								}else{
 									hashedStates[temp] = temp
 								}
@@ -104,18 +104,17 @@ func ExploreDistributed(initialState State) []State{
 						//check if state has been encountered before
 						temp := newState.ToString()
 						if _, ok := hashedStates[temp]; ok{
-							break;
+							continue;
 						} else{
 							hashedStates[temp] = temp
 						}
 						//add newstate to waitinglist, for distributed, call distribute function, which hashes and does stuff
 						if ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(newState.globalVariables){
-							var num uint32 = Hash(newState.ToString())
-							var sendToNode uint32 = num%lenOfIpaddreses
-							if (sendToNode == uint32(selfNodeNumber)){
+							var num = Hash(newState.ToString())%lenOfIpaddreses
+							if (num == uint32(selfNodeNumber)){
 								waitingList = append(waitingList, newState)
 							}else{
-								SendAState(newState, sendToNode)
+								SendAState(newState, num)
 							}
 						}
 					}
@@ -139,7 +138,13 @@ func ExploreDistributed(initialState State) []State{
 			time.Sleep(900*time.Millisecond) //if empty we wait a bit, to see if other machines send some states that need exploration
 		}
 		tempList1 := FromChannelToList(channel)
-		waitingList = append(waitingList, tempList1...)
+		for _, state := range tempList1{
+			_, ok := hashedStates[state.ToString()] //ok is true if state is seen
+			if !ok { //if not okay, then add stuff, otherwise skip
+				hashedStates[state.ToString()] = state.ToString()
+				waitingList = append(waitingList, state)
+			}
+		}
 		//if waitingList still empty, we prolly done with exploring
 	}
 	/*
