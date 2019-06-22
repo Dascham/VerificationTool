@@ -82,8 +82,8 @@ func ExploreDistributed(initialState State) []State{
 								}
 								//add state to waitinglist, add only if map is valid
 								if (ValidMap(newState.allTemplates[i].LocalVariables) && ValidMap(newState.globalVariables)){
-									num := Hash(newState.ToString())
-									if (num%lenOfIpaddreses == uint32(selfNodeNumber)){
+									num := Hash(newState.ToString())%lenOfIpaddreses
+									if (num == uint32(selfNodeNumber)){
 										waitingList = append(waitingList, newState)
 									}else{
 										SendAState(newState, num)

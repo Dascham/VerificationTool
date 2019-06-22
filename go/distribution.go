@@ -107,6 +107,7 @@ func SendAState(s State, sendToNode uint32){
 }
 
 //was 'ReceiveAState', master and node run this function, always
+
 func ReceiveStates(channel chan State, s State) {
 	ln, err := net.Listen("tcp", portNumbers1[1]) //5001
 	println("listening")
@@ -121,6 +122,21 @@ func ReceiveStates(channel chan State, s State) {
 		go HelpPutStateInChannel(conn, channel, s)
 	}
 }
+/*
+//rewriting function in order to establish single connection
+func ReceiveStates(channel chan State, s State) {
+	ln, err := net.Listen("tcp", portNumbers1[1]) //5001
+	println("listening")
+	if err != nil {
+		fmt.Printf("Something went wrong")
+	}
+	conn, err := ln.Accept()
+	if err != nil {
+		fmt.Printf("Second layer of wrong")
+	}
+	go HelpPutStateInChannel(conn, channel, s)
+}
+*/
 //helper function for ReceiveStates
 func HelpPutStateInChannel(conn net.Conn, channel chan State, s State) {
 	//buffer := new(bytes.Buffer)

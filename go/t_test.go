@@ -323,11 +323,18 @@ func TestBuffer(t *testing.T){
 	var buff bytes.Buffer
 
 	//single write is okay, but double is bad
+	var delimitChar []byte = []byte{64} //@ sign in byte
 	buff.Write(jsonbytes)
+	buff.Write(delimitChar)
 	buff.Write(jsonbytes)
 
 	si1 := StateInformation{}
-	//json.Unmarshal(buff.ReadBytes([]byte(io.EOF)), &si1)
+	obj, _ := buff.ReadBytes(delimitChar[0]) //fix obj, cause there is @ sign at the end,but it is always last element
+
+	obj = obj[:len(obj)-1]
+
+	fmt.Println(obj)
+	json.Unmarshal(obj, &si1)
 
 	fmt.Println(si1.GlobalVariables)
 }

@@ -81,6 +81,10 @@ func removeLocation(a []*Location, i int) []*Location {
 
 	return a
 }
+func removeByte(s []byte, i int) []byte {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
+}
 
 func FromChannelToList(channel chan State)[]State{
 	var tempList []State = make([]State,0,0)
