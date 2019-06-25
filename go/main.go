@@ -12,8 +12,27 @@ import (
 var selfNodeNumber int = 0
 
 func main(){
-	Master()
+	list, generatedStates:= Explore(ParallelSetup(SetupCounterModel(), SetupCounterModel())) //2x counter model i parallel, "help_functions" for andre modeller
+	fmt.Printf("Length of passedList: %d\nGenerated States: %d", len(list), generatedStates)
 }
+
+/*
+func main2(){
+	var accumulator time.Duration = 0
+	model := ParallelSetup(SetupCounterModel())
+	for j := 0; j <10;j++ {
+		start := time.Now()
+		for i := 0; i < 1000; i++ {
+			Explore(model)
+		}
+		accumulator = accumulator + time.Since(start)
+		fmt.Println(accumulator/1000)
+		accumulator = 0
+	}
+}
+ */
+
+
 func Master(){
 	selfNodeNumber = 0
 	//assign numbers to nodes
@@ -135,14 +154,14 @@ func ExploreDistributed(initialState State) []State{
 		}
 
 		if(len(waitingList) == 0){
-			time.Sleep(900*time.Millisecond) //if empty we wait a bit, to see if other machines send some states that need exploration
-		}
-		tempList1 := FromChannelToList(channel)
-		for _, state := range tempList1{
-			_, ok := hashedStates[state.ToString()] //ok is true if state is seen
-			if !ok { //if not okay, then add stuff, otherwise skip
-				hashedStates[state.ToString()] = state.ToString()
-				waitingList = append(waitingList, state)
+			time.Sleep(1200*time.Millisecond) //if empty we wait a bit, to see if other machines send some states that need exploration
+			tempList1 := FromChannelToList(channel)
+			for _, state := range tempList1{
+				_, ok := hashedStates[state.ToString()] //ok is true if state is seen
+				if !ok { //if not okay, then add stuff, otherwise skip
+					hashedStates[state.ToString()] = state.ToString()
+					waitingList = append(waitingList, state)
+				}
 			}
 		}
 		//if waitingList still empty, we prolly done with exploring
@@ -160,16 +179,18 @@ func ExploreDistributed(initialState State) []State{
 	return passedList
 }
 
-func Explore(initialState State) []State{
+func Explore(initialState State) ([]State, int){
 	var hashedStates map[string]string = make(map[string]string)
 	hashedStates[initialState.ToString()] = initialState.ToString()
 	var waitingList []State = make([]State, 0,0) //size zero, always, cause append fixes size by itself
 	waitingList = append(waitingList, initialState)
 	var passedList []State = make([]State, 0,0)
-
+	var counter int = 0
 	for len(waitingList) > 0 { //exploration loop
 		var currentState = waitingList[0]
 		waitingList = remove(waitingList, 0)
+		//Exploring new state, so incrementing
+		counter++
 		for i := 0;i < len(currentState.allTemplates);i++{
 			for j := 0 ; j < len(currentState.allTemplates[i].currentLocation.Edges); j++{
 				if (currentState.allTemplates[i].currentLocation.Edges[j].EdgeIsActive(currentState.allTemplates[i].LocalVariables, currentState)){
@@ -228,8 +249,9 @@ func Explore(initialState State) []State{
 		}
 		//now we have tried everything that is possible for this state, therefore add to passed list
 		passedList = append(passedList, currentState)
+		//break; //have this statement be active to only explore 1 state
 	}
-	return passedList
+	return passedList, counter
 }
 
 //helper function, for finding an synchronization partner for an edge

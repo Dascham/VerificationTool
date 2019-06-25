@@ -14,7 +14,7 @@ func Experiment1(){
 	s.allTemplates = make([]Template, 0,0)
 	s.allTemplates = append(s.allTemplates, SetupTestTemplate2(), SetupTestTemplate3(),SetupTestTemplate3(), SetupTestTemplate3())
 	s.globalVariables = map[string]int{"b":0}
-	list := Explore(s)
+	list,_ := Explore(s)
 	fmt.Print("Number of states explored: ")
 	fmt.Println(len(list))
 	fmt.Println("Running time: "+time.Since(start).String())
@@ -27,7 +27,7 @@ func Experiment2(){
 	s.allTemplates = make([]Template, 0,0)
 	s.allTemplates = append(s.allTemplates, SetupTestTemplate4_nosync(),SetupTestTemplate4_nosync(),SetupTestTemplate4_nosync(), SetupTestTemplate4_nosync())
 	s.globalVariables = map[string]int{"b":0}
-	list := Explore(s)
+	list,_ := Explore(s)
 	fmt.Print("Number of states explored: ")
 	fmt.Println(len(list))
 	fmt.Println("Running time: "+time.Since(start).String())
@@ -40,7 +40,7 @@ func Experiment3(){
 	s.allTemplates = make([]Template, 0,0)
 	s.allTemplates = append(s.allTemplates, SetupTestTemplate1(), SetupTestTemplate1(), SetupTestTemplate1(), SetupTestTemplate1())
 	s.globalVariables = map[string]int{"b":0}
-	list := Explore(s)
+	list,_ := Explore(s)
 	fmt.Print("Number of states explored: ")
 	fmt.Println(len(list))
 	fmt.Println("Running time: "+time.Since(start).String())
